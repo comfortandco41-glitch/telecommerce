@@ -86,5 +86,34 @@ export class TelegramClient {
 
     return res.json();
   }
+
+  async getFile(botToken: string, fileId: string): Promise<{ file_path?: string }> {
+    const url = this.getUrl(botToken, "getFile") + `?file_id=${fileId}`;
+    const res = await fetch(url, { method: "GET" });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Telegram API Error (getFile): ${res.status} - ${errText}`);
+    }
+
+    const json = (await res.json()) as any;
+    if (!json.ok || !json.result) {
+      throw new Error(`Telegram getFile response not OK: ${JSON.stringify(json)}`);
+    }
+    return json.result;
+  }
+
+  async downloadFile(botToken: string, filePath: string): Promise<Buffer> {
+    const url = `https://api.telegram.org/file/bot${botToken}/${filePath}`;
+    const res = await fetch(url, { method: "GET" });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Telegram File Download Error: ${res.status} - ${errText}`);
+    }
+
+    const arrayBuffer = await res.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  }
 }
 export const telegramClient = new TelegramClient();

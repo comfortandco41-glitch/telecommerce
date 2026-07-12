@@ -88,18 +88,20 @@ model Product {
 }
 
 model Customer {
-  id         String   @id @default(uuid())
-  shopId     String
-  shop       Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  telegramId BigInt   // Keep BigInt for 64-bit Telegram user IDs
-  username   String?
-  firstName  String
-  lastName   String?
-  phone      String?
-  address    String?  @db.Text
-  orders     Order[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           String   @id @default(uuid())
+  shopId       String
+  shop         Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  telegramId   BigInt   // Keep BigInt for 64-bit Telegram user IDs
+  username     String?
+  firstName    String
+  lastName     String?
+  phone        String?
+  address      String?  @db.Text
+  checkoutStep String   @default("IDLE")
+  cart         Json?
+  orders       Order[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@unique([shopId, telegramId])
   @@index([shopId])

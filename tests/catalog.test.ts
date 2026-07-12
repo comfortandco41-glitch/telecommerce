@@ -33,6 +33,9 @@ describe("Phase 2 Catalog - REST Endpoints and Bot Flows", () => {
     telegramClientMock.sendMessage.mockResolvedValue({ ok: true });
     telegramClientMock.editMessageText.mockResolvedValue({ ok: true });
     telegramClientMock.answerCallbackQuery.mockResolvedValue({ ok: true });
+
+    prismaMock.customer.findFirst.mockResolvedValue({ id: "cust-1", checkoutStep: "IDLE", cart: [] });
+    prismaMock.customer.create.mockResolvedValue({ id: "cust-1", checkoutStep: "IDLE", cart: [] });
   });
 
   const shopId = "shop-uuid-123";
@@ -132,6 +135,7 @@ describe("Phase 2 Catalog - REST Endpoints and Bot Flows", () => {
         update_id: 9901,
         message: {
           chat: { id: 8877 },
+          from: { id: 8877, first_name: "John", last_name: "Doe", username: "johndoe" },
           text: "/start",
         },
       };
@@ -172,6 +176,7 @@ describe("Phase 2 Catalog - REST Endpoints and Bot Flows", () => {
         update_id: 9902,
         callback_query: {
           id: "cb-query-id-1",
+          from: { id: 8877, first_name: "John", last_name: "Doe", username: "johndoe" },
           message: {
             chat: { id: 8877 },
             message_id: 4545,
