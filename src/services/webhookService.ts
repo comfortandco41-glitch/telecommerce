@@ -7,6 +7,7 @@ import { OrderRepository } from "../repositories/orderRepository";
 import { telegramClient } from "./telegramClient";
 import { escapeMarkdownV2 } from "../utils/markdown";
 import { supabase } from "../db/supabaseClient";
+import { workflowService } from "./workflowService";
 
 export class WebhookService {
   private webhookRepo = new WebhookRepository();
@@ -447,6 +448,15 @@ export class WebhookService {
       deliveryPhone: customer.phone || "00000000",
       bankScreenshotUrl: screenshotUrl,
       items: orderItems,
+    });
+
+    workflowService.trigger(shop.id, "ORDER_CREATED", {
+      orderId: order.id,
+      amount: totalAmount.toFixed(2),
+      customerName: `${customer.firstName || ""} ${customer.lastName || ""}`.trim(),
+      botToken: shop.botToken,
+    }).catch((err) => {
+      console.error("Workflow broker ORDER_CREATED error:", err.message);
     });
 
     // 6. Reset cart session and checkout steps

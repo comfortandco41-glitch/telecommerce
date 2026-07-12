@@ -49,6 +49,7 @@ model Shop {
   orders              Order[]
   broadcasts          Broadcast[]
   webhookLogs         WebhookLog[]
+  workflows           Workflow[]
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
 }
@@ -164,4 +165,18 @@ model WebhookLog {
   createdAt    DateTime @default(now())
 
   @@index([shopId, createdAt])
+}
+
+model Workflow {
+  id        String   @id @default(uuid())
+  shopId    String
+  shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  name      String
+  trigger   String   
+  action    String   
+  config    Json     
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([shopId, trigger])
 }

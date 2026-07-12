@@ -4,6 +4,7 @@ import { OrderRepository } from "../repositories/orderRepository";
 import { AppError } from "../errors/appError";
 import { OrderStatus } from "@prisma/client";
 import { InvoiceService } from "../services/invoiceService";
+import { workflowService } from "../services/workflowService";
 
 const orderRepo = new OrderRepository();
 
@@ -48,6 +49,17 @@ export async function handleUpdateStatus(
       const invoiceService = new InvoiceService();
       invoiceService.generateAndSendInvoice(shopId, orderId).catch((err) => {
         console.error("Background invoice compiler error:", err.message);
+      });
+
+      workflowService.trigger(shopId, "ORDER_PAID", {
+        orderId,
+        amount: Number(order.totalAmount).toFixed(2),
+        customerName: order.customer
+          ? `${order.customer.firstName || ""} ${order.customer.lastName || ""}`.trim()
+          : "Valued Customer",
+        botToken: (order as any).shop?.botToken,
+      }).catch((err) => {
+        console.error("Workflow broker ORDER_PAID error:", err.message);
       });
     }
 

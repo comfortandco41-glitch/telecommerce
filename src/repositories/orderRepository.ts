@@ -67,7 +67,7 @@ export class OrderRepository {
     });
   }
 
-  async getById(shopId: string, id: string): Promise<Order | null> {
+  async getById(shopId: string, id: string): Promise<any> {
     return prisma.order.findFirst({
       where: { id, shopId },
       include: {
