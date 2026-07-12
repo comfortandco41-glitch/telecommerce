@@ -13,6 +13,15 @@ jest.mock("../src/db/client", () => {
   };
 });
 
+// Mock the Telegram Client
+jest.mock("../src/services/telegramClient", () => ({
+  telegramClient: {
+    sendMessage: jest.fn().mockResolvedValue({ ok: true }),
+    editMessageText: jest.fn().mockResolvedValue({ ok: true }),
+    answerCallbackQuery: jest.fn().mockResolvedValue({ ok: true }),
+  },
+}));
+
 const prismaMock = prisma as any;
 
 describe("POST /api/v1/webhook/:shopId", () => {
@@ -30,7 +39,7 @@ describe("POST /api/v1/webhook/:shopId", () => {
     const response = await request(app)
       .post(`/api/v1/webhook/${shopId}`)
       .set("X-Telegram-Bot-Api-Secret-Token", "some-token")
-      .send({ update_id: 12345, message: { text: "hello" } });
+      .send({ update_id: 12345, message: { chat: { id: 8877 }, text: "hello" } });
 
     expect(response.status).toBe(404);
     expect(response.body.success).toBe(false);
@@ -43,7 +52,7 @@ describe("POST /api/v1/webhook/:shopId", () => {
 
     const response = await request(app)
       .post(`/api/v1/webhook/${shopId}`)
-      .send({ update_id: 12345, message: { text: "hello" } });
+      .send({ update_id: 12345, message: { chat: { id: 8877 }, text: "hello" } });
 
     expect(response.status).toBe(403);
     expect(response.body.success).toBe(false);
@@ -57,7 +66,7 @@ describe("POST /api/v1/webhook/:shopId", () => {
     const response = await request(app)
       .post(`/api/v1/webhook/${shopId}`)
       .set("X-Telegram-Bot-Api-Secret-Token", "wrong-secret-token")
-      .send({ update_id: 12345, message: { text: "hello" } });
+      .send({ update_id: 12345, message: { chat: { id: 8877 }, text: "hello" } });
 
     expect(response.status).toBe(403);
     expect(response.body.success).toBe(false);
@@ -71,7 +80,7 @@ describe("POST /api/v1/webhook/:shopId", () => {
     const response = await request(app)
       .post(`/api/v1/webhook/${shopId}`)
       .set("X-Telegram-Bot-Api-Secret-Token", validSecretToken)
-      .send({ message: { text: "hello" } });
+      .send({ message: { chat: { id: 8877 }, text: "hello" } });
 
     expect(response.status).toBe(400);
     expect(response.body.success).toBe(false);
@@ -89,7 +98,7 @@ describe("POST /api/v1/webhook/:shopId", () => {
     const response = await request(app)
       .post(`/api/v1/webhook/${shopId}`)
       .set("X-Telegram-Bot-Api-Secret-Token", validSecretToken)
-      .send({ update_id: 12345, message: { text: "hello" } });
+      .send({ update_id: 12345, message: { chat: { id: 8877 }, text: "hello" } });
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -109,7 +118,7 @@ describe("POST /api/v1/webhook/:shopId", () => {
     const response = await request(app)
       .post(`/api/v1/webhook/${shopId}`)
       .set("X-Telegram-Bot-Api-Secret-Token", validSecretToken)
-      .send({ update_id: 12345, message: { text: "hello" } });
+      .send({ update_id: 12345, message: { chat: { id: 8877 }, text: "hello" } });
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);

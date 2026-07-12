@@ -1,0 +1,90 @@
+export class TelegramClient {
+  private getUrl(botToken: string, method: string): string {
+    return `https://api.telegram.org/bot${botToken}/${method}`;
+  }
+
+  async sendMessage(
+    botToken: string,
+    chatId: string | number | bigint,
+    text: string,
+    replyMarkup?: unknown
+  ): Promise<unknown> {
+    const url = this.getUrl(botToken, "sendMessage");
+    const payload = {
+      chat_id: chatId.toString(),
+      text,
+      parse_mode: "MarkdownV2",
+      reply_markup: replyMarkup,
+    };
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Telegram API Error (sendMessage): ${res.status} - ${errText}`);
+    }
+
+    return res.json();
+  }
+
+  async editMessageText(
+    botToken: string,
+    chatId: string | number | bigint,
+    messageId: number,
+    text: string,
+    replyMarkup?: unknown
+  ): Promise<unknown> {
+    const url = this.getUrl(botToken, "editMessageText");
+    const payload = {
+      chat_id: chatId.toString(),
+      message_id: messageId,
+      text,
+      parse_mode: "MarkdownV2",
+      reply_markup: replyMarkup,
+    };
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Telegram API Error (editMessageText): ${res.status} - ${errText}`);
+    }
+
+    return res.json();
+  }
+
+  async answerCallbackQuery(botToken: string, callbackQueryId: string): Promise<unknown> {
+    const url = this.getUrl(botToken, "answerCallbackQuery");
+    const payload = {
+      callback_query_id: callbackQueryId,
+    };
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Telegram API Error (answerCallbackQuery): ${res.status} - ${errText}`);
+    }
+
+    return res.json();
+  }
+}
+export const telegramClient = new TelegramClient();
