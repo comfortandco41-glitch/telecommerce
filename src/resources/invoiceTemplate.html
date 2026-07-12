@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Invoice - {{orderId}}</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #333333;
+      margin: 0;
+      padding: 40px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .invoice-header {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 2px solid #E5E7EB;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .invoice-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #6366F1; /* Indigo matching system theme */
+      margin: 0 0 5px 0;
+    }
+    .invoice-details {
+      text-align: right;
+      font-size: 13px;
+      color: #6B7280;
+    }
+    .section-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-bottom: 40px;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #9CA3AF;
+      margin-bottom: 8px;
+    }
+    .profile-card {
+      background-color: #F9FAFB;
+      border: 1px solid #E5E7EB;
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .profile-name {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+    .profile-detail {
+      font-size: 13px;
+      color: #4B5563;
+      margin-bottom: 2px;
+    }
+    .item-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 40px;
+    }
+    .item-table th {
+      background-color: #F3F4F6;
+      font-weight: 600;
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #374151;
+      border-bottom: 1px solid #E5E7EB;
+    }
+    .item-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #E5E7EB;
+      font-size: 13px;
+    }
+    .total-section {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .total-card {
+      width: 250px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 13px;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+    }
+    .total-row.grand-total {
+      font-size: 16px;
+      font-weight: 700;
+      color: #6366F1;
+      border-top: 1px solid #E5E7EB;
+      padding-top: 8px;
+      margin-top: 8px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 60px;
+      font-size: 12px;
+      color: #9CA3AF;
+      border-top: 1px solid #E5E7EB;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="invoice-header">
+    <div>
+      <h1 class="invoice-title">INVOICE</h1>
+      <span style="font-weight: 500; font-size: 13px; color: #4B5563;">Shop: {{shopName}}</span>
+    </div>
+    <div class="invoice-details">
+      <div>Invoice Reference: <strong>#{{orderId}}</strong></div>
+      <div style="margin-top: 4px;">Date issued: {{issueDate}}</div>
+    </div>
+  </div>
+
+  <div class="section-grid">
+    <div>
+      <div class="section-title">Supplier</div>
+      <div class="profile-card">
+        <div class="profile-name">{{shopName}}</div>
+        <div class="profile-detail">Status: Payment Confirmed</div>
+      </div>
+    </div>
+    <div>
+      <div class="section-title">Customer Shipping Profile</div>
+      <div class="profile-card">
+        <div class="profile-name">{{customerName}}</div>
+        <div class="profile-detail">Phone: {{deliveryPhone}}</div>
+        <div class="profile-detail">Address: {{deliveryAddress}}</div>
+      </div>
+    </div>
+  </div>
+
+  <table class="item-table">
+    <thead>
+      <tr>
+        <th>Description</th>
+        <th style="text-align: center; width: 80px;">Qty</th>
+        <th style="text-align: right; width: 120px;">Unit Price</th>
+        <th style="text-align: right; width: 120px;">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each items}}
+      <tr>
+        <td>{{this.productName}}</td>
+        <td style="text-align: center;">{{this.quantity}}</td>
+        <td style="text-align: right;">${{this.unitPrice}}</td>
+        <td style="text-align: right; font-weight: 500;">${{this.totalPrice}}</td>
+      </tr>
+      {{/each}}
+    </tbody>
+  </table>
+
+  <div class="total-section">
+    <div class="total-card">
+      <div class="total-row">
+        <span style="color: #6B7280;">Subtotal</span>
+        <span style="font-weight: 500;">${{totalAmount}}</span>
+      </div>
+      <div class="total-row">
+        <span style="color: #6B7280;">Tax (0%)</span>
+        <span style="font-weight: 500;">$0.00</span>
+      </div>
+      <div class="total-row grand-total">
+        <span>Total Paid</span>
+        <span>${{totalAmount}}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Thank you for shopping at {{shopName}}! If you have questions regarding this invoice, please reach out to our bot admin.
+  </div>
+
+</body>
+</html>

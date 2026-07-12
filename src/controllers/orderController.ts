@@ -3,6 +3,7 @@ import { AuthenticatedRequest } from "../middlewares/authMiddleware";
 import { OrderRepository } from "../repositories/orderRepository";
 import { AppError } from "../errors/appError";
 import { OrderStatus } from "@prisma/client";
+import { InvoiceService } from "../services/invoiceService";
 
 const orderRepo = new OrderRepository();
 
@@ -42,6 +43,14 @@ export async function handleUpdateStatus(
     }
 
     const updated = await orderRepo.updateStatus(shopId, orderId, status);
+
+    if (status === OrderStatus.PAID) {
+      const invoiceService = new InvoiceService();
+      invoiceService.generateAndSendInvoice(shopId, orderId).catch((err) => {
+        console.error("Background invoice compiler error:", err.message);
+      });
+    }
+
     res.status(200).json({
       success: true,
       data: updated,

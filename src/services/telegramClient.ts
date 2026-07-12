@@ -115,5 +115,33 @@ export class TelegramClient {
     const arrayBuffer = await res.arrayBuffer();
     return Buffer.from(arrayBuffer);
   }
+
+  async sendDocument(
+    botToken: string,
+    chatId: string | number,
+    documentUrl: string,
+    _filename?: string
+  ): Promise<unknown> {
+    const url = this.getUrl(botToken, "sendDocument");
+    const payload = {
+      chat_id: chatId,
+      document: documentUrl,
+    };
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Telegram API Error (sendDocument): ${res.status} - ${errText}`);
+    }
+
+    return res.json();
+  }
 }
 export const telegramClient = new TelegramClient();
