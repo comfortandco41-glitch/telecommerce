@@ -62,4 +62,11 @@ export class CustomerRepository {
       },
     });
   }
+
+  async listByShopId(shopId: string): Promise<Customer[]> {
+    return prisma.customer.findMany({
+      where: { shopId },
+      orderBy: { createdAt: "desc" },
+    });
+  }
 }

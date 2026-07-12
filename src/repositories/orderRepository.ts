@@ -71,8 +71,35 @@ export class OrderRepository {
     return prisma.order.findFirst({
       where: { id, shopId },
       include: {
-        items: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
+        customer: true,
       },
+    });
+  }
+
+  async listByShopId(shopId: string): Promise<Order[]> {
+    return prisma.order.findMany({
+      where: { shopId },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+        customer: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  async updateStatus(_shopId: string, id: string, status: any): Promise<Order> {
+    return prisma.order.update({
+      where: { id },
+      data: { status },
     });
   }
 }

@@ -5,6 +5,7 @@ import { telegramClient } from "../src/services/telegramClient";
 import { mockReset } from "jest-mock-extended";
 import { WebhookService } from "../src/services/webhookService";
 import { Decimal } from "@prisma/client/runtime/library";
+import jwt from "jsonwebtoken";
 
 // Mock the database client singleton
 jest.mock("../src/db/client", () => {
@@ -28,6 +29,12 @@ const prismaMock = prisma as any;
 const telegramClientMock = telegramClient as any;
 
 describe("Phase 2 Catalog - REST Endpoints and Bot Flows", () => {
+  const shopId = "shop-uuid-123";
+  const botToken = "test-bot-token";
+  const merchantId = "merchant-uuid-111";
+  const JWT_SECRET = process.env.JWT_SECRET || "local-jwt-secret-key-32-bytes-long";
+  const token = jwt.sign({ id: merchantId, email: "merchant@test.com" }, JWT_SECRET);
+
   beforeEach(() => {
     mockReset(prismaMock);
     telegramClientMock.sendMessage.mockResolvedValue({ ok: true });
@@ -36,10 +43,10 @@ describe("Phase 2 Catalog - REST Endpoints and Bot Flows", () => {
 
     prismaMock.customer.findFirst.mockResolvedValue({ id: "cust-1", checkoutStep: "IDLE", cart: [] });
     prismaMock.customer.create.mockResolvedValue({ id: "cust-1", checkoutStep: "IDLE", cart: [] });
-  });
 
-  const shopId = "shop-uuid-123";
-  const botToken = "test-bot-token";
+    prismaMock.merchant.findUnique.mockResolvedValue({ id: merchantId, email: "merchant@test.com", name: "Jane" });
+    prismaMock.shop.findUnique.mockResolvedValue({ id: shopId, merchantId });
+  });
 
   describe("REST API - Categories", () => {
     it("should create a category on valid input", async () => {
@@ -48,6 +55,7 @@ describe("Phase 2 Catalog - REST Endpoints and Bot Flows", () => {
 
       const response = await request(app)
         .post(`/api/v1/shops/${shopId}/categories`)
+        .set("Authorization", `Bearer ${token}`)
         .send({ name: "Vinyls", description: "Old pressings" });
 
       expect(response.status).toBe(201);
@@ -59,6 +67,7 @@ describe("Phase 2 Catalog - REST Endpoints and Bot Flows", () => {
     it("should reject category creation with empty name", async () => {
       const response = await request(app)
         .post(`/api/v1/shops/${shopId}/categories`)
+        .set("Authorization", `Bearer ${token}`)
         .send({ name: "" });
 
       expect(response.status).toBe(400);
@@ -73,6 +82,7 @@ describe("Phase 2 Catalog - REST Endpoints and Bot Flows", () => {
 
       const response = await request(app)
         .post(`/api/v1/shops/${shopId}/products`)
+        .set("Authorization", `Bearer ${token}`)
         .send({
           categoryId: "invalid-cat",
           name: "Led Zeppelin III",
@@ -104,6 +114,7 @@ describe("Phase 2 Catalog - REST Endpoints and Bot Flows", () => {
 
       const response = await request(app)
         .post(`/api/v1/shops/${shopId}/products`)
+        .set("Authorization", `Bearer ${token}`)
         .send({
           categoryId: "cat-1",
           name: "Led Zeppelin III",

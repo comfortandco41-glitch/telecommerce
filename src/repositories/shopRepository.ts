@@ -13,4 +13,10 @@ export class ShopRepository {
       where: { botToken },
     });
   }
+
+  async listByMerchantId(merchantId: string): Promise<Shop[]> {
+    return prisma.shop.findMany({
+      where: { merchantId },
+    });
+  }
 }
