@@ -54,6 +54,66 @@ Telegram limits callback button payload (`callback_data`) to **64 bytes**. We us
 
 ---
 
+## 4. Telegram WebApp Button Integration
+
+To provide a premium e-commerce shopping experience, SuperBot supports launching a React storefront WebApp directly inside Telegram. WebApps can be invoked using two primary button configurations:
+
+### 1. Inline Keyboard WebApp Buttons
+Perfect for category context menus or single product showcases:
+```json
+{
+  "inline_keyboard": [
+    [
+      {
+        "text": "🛍️ Browse Shop WebApp",
+        "web_app": {
+          "url": "https://storefront.superbot.app/shop/8b08e2d4-1a3b"
+        }
+      }
+    ]
+  ]
+}
+```
+
+### 2. Persistent Menu Keyboard Buttons
+Placed in the bottom chat interface for quick launch access:
+```json
+{
+  "keyboard": [
+    [
+      {
+        "text": "📱 Open Storefront App",
+        "web_app": {
+          "url": "https://storefront.superbot.app/shop/8b08e2d4-1a3b"
+        }
+      }
+    ]
+  ],
+  "resize_keyboard": true,
+  "is_persistent": true
+}
+```
+
+### 3. WebApp to Bot Data Communication
+When checkout is finalized within the React WebApp, it submits the cart payload back to the Telegram conversation thread:
+```javascript
+// Triggered inside the React/Vite storefront webapp context
+if (window.Telegram?.WebApp) {
+  const payload = {
+    action: "web_app_checkout",
+    cartItems: [
+      { productId: "prod-1", quantity: 2, price: 29.99 }
+    ]
+  };
+  
+  // Closes the WebApp window and fires a WebAppUpdate payload to the bot
+  window.Telegram.WebApp.sendData(JSON.stringify(payload));
+}
+```
+The Express webhook catches this under `message.web_app_data.data`, parses the JSON object, updates the checkout session cache, and transitions the conversation flow to `AWAITING_RECEIPT`.
+
+---
+
 ## 4. Markdown Formatting Rules
 
 All Telegram messages use `parse_mode: "MarkdownV2"`. You must escape special characters `_ * [ ] ( ) ~ ` > # + - = | { } . !` using a helper utility to avoid message delivery failures:

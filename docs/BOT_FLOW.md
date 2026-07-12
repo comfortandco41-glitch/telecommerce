@@ -49,8 +49,19 @@ To manage complex checkout flows across multiple active users, we track conversa
 - **Action**: User types `/start` or clicks the link.
 - **Bot Response**: Welcomes the customer by name. Displays the store's `welcomeMessage` and inline buttons listing top-level categories.
 - **Buttons**:
-  - `[ 💿 Vinyl Records ]`  `[ 👕 Apparel ]`
+  - `[ 🛍️ Launch WebApp Storefront ]` *(Recommended - Opens full UI storefront)*
+  - `[ 💿 Vinyl Records ]`  `[ 👕 Apparel ]` *(Conversational Fallbacks)*
   - `[ 🛒 View Cart (0) ]`
+
+### Alternative Path: WebApp Storefront Flow
+For an enhanced interface, users can complete the entire selection flow visually:
+1. **Entry**: Customer clicks `[ 🛍️ Launch WebApp Storefront ]` or the persistent keyboard button.
+2. **Shopping**: User browses categories, searches products, and adds items to their cart in the React WebApp frame.
+3. **Checkout Finalization**: User clicks "Submit Checkout" in the app, which invokes:
+   `window.Telegram.WebApp.sendData(JSON.stringify({ action: "web_app_checkout", items: [...] }));`
+4. **Resuming Chat Flow**: The WebApp window closes. The webhook captures the cart, registers the customer delivery profile, creates the order record, sets state to `AWAITING_RECEIPT`, and outputs the payment bank instructions immediately in the chat thread.
+
+---
 
 ### Step 2: Category and Product Browsing
 - **Action**: User clicks `[ 💿 Vinyl Records ]`.
