@@ -7,6 +7,7 @@ import { handleRegister, handleLogin, handleMe } from "./controllers/authControl
 import { handleGetShops, handleCreateShop } from "./controllers/shopController";
 import { handleGetOrders, handleUpdateStatus } from "./controllers/orderController";
 import { handleGetCustomers } from "./controllers/customerController";
+import { handleGetBroadcasts, handleCreateBroadcast } from "./controllers/broadcastController";
 import { authMiddleware } from "./middlewares/authMiddleware";
 import { shopAccessMiddleware } from "./middlewares/shopAccessMiddleware";
 import { errorMiddleware } from "./middlewares/errorMiddleware";
@@ -102,6 +103,20 @@ app.get(
   authMiddleware,
   shopAccessMiddleware,
   handleGetCustomers
+);
+
+// Broadcast Routes (Secure)
+app.get(
+  "/api/v1/shops/:shopId/broadcasts",
+  authMiddleware,
+  shopAccessMiddleware,
+  handleGetBroadcasts
+);
+app.post(
+  "/api/v1/shops/:shopId/broadcasts",
+  authMiddleware,
+  shopAccessMiddleware,
+  handleCreateBroadcast
 );
 
 // Health check
