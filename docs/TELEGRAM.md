@@ -1,0 +1,66 @@
+# TELEGRAM.md - Telegram Bot API Integration Spec
+
+This document details the Telegram Bot API commands, payload structures, inline keyboards, and configuration methods.
+
+---
+
+## 1. Bot Command Registry
+
+Upon connecting a new bot token, the server registers the standard command menu using the `setMyCommands` endpoint:
+
+```
+POST https://api.telegram.org/bot<BOT_TOKEN>/setMyCommands
+Payload: {
+  "commands": [
+    {"command": "start", "description": "Browse shop products & categories"},
+    {"command": "cart", "description": "View current shopping cart and checkout"},
+    {"command": "orders", "description": "Check your order history and status"},
+    {"command": "help", "description": "View payment info and merchant support"}
+  ]
+}
+```
+
+---
+
+## 2. API Methods Implemented
+
+To avoid heavy dependency trees and ensure control, the backend makes native HTTP requests to `https://api.telegram.org/bot<BOT_TOKEN>/<method>` using `axios`.
+
+### Core Methods Used
+- **`getMe`**: Verifies bot token validity and fetches the bot username during onboarding.
+- **`sendMessage`**: Sends rich text updates supporting `MarkdownV2` styling.
+- **`sendPhoto`**: Delivers product listings with description captions.
+- **`sendDocument`**: Transmits generated PDF invoices.
+- **`answerCallbackQuery`**: Acknowledges button clicks instantly to clear loading spinners on the user client.
+- **`editMessageText` / `editMessageReplyMarkup`**: Implements in-place screen replacement for categories, products, and cart screens to avoid cluttering chat history.
+
+---
+
+## 3. Compact Callback Data Schema
+
+Telegram limits callback button payload (`callback_data`) to **64 bytes**. We use a compressed, colon-separated namespace schema to fit metadata:
+
+| Action | Callback Data Pattern | Description |
+| :--- | :--- | :--- |
+| **View Category** | `cat:<uuid_prefix>` | Displays products belonging to the selected category. |
+| **View Product** | `prod:<uuid_prefix>` | Displays specific product details, price, and "Add to Cart" button. |
+| **Add Product** | `add:<uuid_prefix>` | Appends product to cart, shows immediate "Added!" pop-up notification. |
+| **Sub Product** | `sub:<uuid_prefix>` | Decrements quantity of a product in the cart. |
+| **View Cart** | `cart_view` | Displays cart items, total sum, and "Proceed to Checkout" button. |
+| **Checkout** | `checkout_start` | Triggers checkout questionnaire (name, address, phone). |
+| **Confirm Order** | `order_confirm` | Generates order record and asks user to upload payment screenshot. |
+
+*(Note: Because UUIDs are 36 characters, we index product/category records by a shortened 8-character unique hash or prefix to fit callback limits).*
+
+---
+
+## 4. Markdown Formatting Rules
+
+All Telegram messages use `parse_mode: "MarkdownV2"`. You must escape special characters `_ * [ ] ( ) ~ ` > # + - = | { } . !` using a helper utility to avoid message delivery failures:
+
+```typescript
+export function escapeMarkdownV2(text: string): string {
+  return text.replace(/[_*[\]()~`>#+\-=|{}.!]/g, "\\$&");
+}
+```
+Ensure all dynamic values (product titles, prices, names) pass through this escape utility before assembly.
