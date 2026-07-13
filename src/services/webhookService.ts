@@ -594,7 +594,13 @@ export class WebhookService {
       return;
     }
 
-    const text = `*${escapeMarkdownV2(product.name)}*\n\n` +
+    let text = "";
+    if (product.images && product.images.length > 0) {
+      const imageUrl = product.images[0];
+      text += `[\u200B](${imageUrl})`;
+    }
+
+    text += `*${escapeMarkdownV2(product.name)}*\n\n` +
       `Price: *${escapeMarkdownV2(shop.currency)}${escapeMarkdownV2(product.price.toString())}*\n` +
       `In Stock: ${product.stock}\n\n` +
       `${escapeMarkdownV2(product.description || "")}`;

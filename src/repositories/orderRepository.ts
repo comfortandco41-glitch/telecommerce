@@ -77,6 +77,7 @@ export class OrderRepository {
           },
         },
         customer: true,
+        shop: true,
       },
     });
   }
