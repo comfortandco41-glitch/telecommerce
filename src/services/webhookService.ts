@@ -488,8 +488,9 @@ export class WebhookService {
 
       // 7. Alert customer with friendly success details
       const successText =
-        `✅ *Order Received Successfully\\!*\n\n` +
-        `We are receiving your order\\. Once our team has confirmed your payment, you will receive an order confirmation message and your invoice PDF\\.\n\n` +
+        `✅ *Order Received Successfully\\!* / *အော်ဒါလက်ခံရရှိပါသည်\\!*\n\n` +
+        `🇬🇧 We are receiving your order\\. Once our team has confirmed your payment, you will receive an order confirmation message and your invoice PDF\\.\n\n` +
+        `🇲🇲 လူကြီးမင်း၏ အော်ဒါကို လက်ခံရရှိထားပါသည်။ ကျွန်ုပ်တို့အဖွဲ့မှ ငွေပေးချေမှုကို အတည်ပြုပြီးပါက အော်ဒါအတည်ပြုချက် မက်ဆေ့ဂျ်နှင့် အင်ဗွိုက်စ် \\(PDF\\) ကို ပေးပို့ပေးပါမည်။\n\n` +
         `*Order ID:* \`${escapeMarkdownV2(order.id)}\``;
 
       await telegramClient.sendMessage(shop.botToken, chatId, successText);
