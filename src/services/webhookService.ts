@@ -228,10 +228,29 @@ export class WebhookService {
     }
 
     await this.customerRepo.update(shop.id, customer.id, { cart });
+    
+    const inlineKeyboard = [
+      [
+        {
+          text: "🛒 View Cart & Checkout",
+          callback_data: "cart_view",
+        },
+      ],
+      [
+        {
+          text: "⬅️ Keep Shopping",
+          callback_data: "back_categories",
+        },
+      ],
+    ];
+
     await telegramClient.sendMessage(
       shop.botToken,
       chatId,
-      escapeMarkdownV2(`"${product.name}" added to cart!`)
+      escapeMarkdownV2(`"${product.name}" added to cart!`),
+      {
+        inline_keyboard: inlineKeyboard,
+      }
     );
   }
 
