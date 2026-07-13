@@ -154,7 +154,7 @@ describe("Phase 3 Checkout - Cart and Payment Receipt Upload Pipeline", () => {
     expect(telegramClientMock.sendMessage).toHaveBeenCalledWith(
       botToken,
       8877,
-      expect.stringContaining("Order Submitted Successfully")
+      expect.stringContaining("Order Received Successfully")
     );
   });
 });

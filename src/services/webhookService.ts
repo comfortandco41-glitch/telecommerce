@@ -417,80 +417,92 @@ export class WebhookService {
 
   private async handleReceiptUpload(shop: any, customer: any, message: any): Promise<void> {
     const chatId = message.chat.id;
-    const photo = message.photo[message.photo.length - 1]; // pick largest resolution
+    try {
+      const photo = message.photo[message.photo.length - 1]; // pick largest resolution
 
-    // 1. Fetch file path from Telegram
-    const fileInfo = await telegramClient.getFile(shop.botToken, photo.file_id);
-    if (!fileInfo.file_path) {
-      throw new Error("Failed to retrieve file_path from Telegram Bot API");
-    }
-
-    // 2. Download raw buffer
-    const buffer = await telegramClient.downloadFile(shop.botToken, fileInfo.file_path);
-
-    // 3. Upload to Supabase Storage receipts bucket
-    const storagePath = `${shop.id}/receipts/${customer.id}-${Date.now()}.jpg`;
-    const { error } = await supabase.storage.from("receipts").upload(storagePath, buffer, {
-      contentType: "image/jpeg",
-    });
-
-    if (error) {
-      throw new Error(`Supabase Storage upload failed: ${error.message}`);
-    }
-
-    // Retrieve public file reference
-    const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(storagePath);
-    const screenshotUrl = urlData.publicUrl;
-
-    // 4. Calculate total amount & assemble order items
-    const cart = (customer.cart as any[]) || [];
-    let totalAmount = 0;
-    const orderItems: any[] = [];
-
-    for (const item of cart) {
-      const product = await this.productRepo.getById(shop.id, item.productId);
-      if (product) {
-        const price = Number(product.price);
-        totalAmount += price * item.quantity;
-        orderItems.push({
-          productId: product.id,
-          quantity: item.quantity,
-          priceAtPurchase: price,
-        });
+      // 1. Fetch file path from Telegram
+      const fileInfo = await telegramClient.getFile(shop.botToken, photo.file_id);
+      if (!fileInfo.file_path) {
+        throw new Error("Failed to retrieve file_path from Telegram Bot API");
       }
+
+      // 2. Download raw buffer
+      const buffer = await telegramClient.downloadFile(shop.botToken, fileInfo.file_path);
+
+      // 3. Upload to Supabase Storage receipts bucket
+      const storagePath = `${shop.id}/receipts/${customer.id}-${Date.now()}.jpg`;
+      const { error } = await supabase.storage.from("receipts").upload(storagePath, buffer, {
+        contentType: "image/jpeg",
+      });
+
+      if (error) {
+        throw new Error(`Supabase Storage upload failed: ${error.message}`);
+      }
+
+      // Retrieve public file reference
+      const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(storagePath);
+      const screenshotUrl = urlData.publicUrl;
+
+      // 4. Calculate total amount & assemble order items
+      const cart = (customer.cart as any[]) || [];
+      let totalAmount = 0;
+      const orderItems: any[] = [];
+
+      for (const item of cart) {
+        const product = await this.productRepo.getById(shop.id, item.productId);
+        if (product) {
+          const price = Number(product.price);
+          totalAmount += price * item.quantity;
+          orderItems.push({
+            productId: product.id,
+            quantity: item.quantity,
+            priceAtPurchase: price,
+          });
+        }
+      }
+
+      // 5. Execute transactional checkout insertion & stock update
+      const order = await this.orderRepo.createOrderTransaction(shop.id, customer.id, {
+        totalAmount,
+        deliveryAddress: customer.address || "Telegram Order",
+        deliveryPhone: customer.phone || "00000000",
+        bankScreenshotUrl: screenshotUrl,
+        items: orderItems,
+      });
+
+      // Trigger ORDER_CREATED workflows in the background
+      workflowService.trigger(shop.id, "ORDER_CREATED", {
+        orderId: order.id,
+        amount: totalAmount.toFixed(2),
+        customerName: `${customer.firstName || ""} ${customer.lastName || ""}`.trim(),
+        botToken: shop.botToken,
+      }).catch((err) => {
+        console.error("Workflow broker ORDER_CREATED error:", err.message);
+      });
+
+      // 6. Reset cart session and checkout steps
+      await this.customerRepo.update(shop.id, customer.id, {
+        checkoutStep: "IDLE",
+        cart: [],
+      });
+
+      // 7. Alert customer with friendly success details
+      const successText =
+        `✅ *Order Received Successfully\\!*\n\n` +
+        `We are receiving your order\\. Once our team has confirmed your payment, you will receive an order confirmation message and your invoice PDF\\.\n\n` +
+        `*Order ID:* \`${escapeMarkdownV2(order.id)}\``;
+
+      await telegramClient.sendMessage(shop.botToken, chatId, successText);
+    } catch (err: any) {
+      console.error("Failed to process payment receipt:", err.message);
+      const errorText = 
+        `❌ *Failed to submit order*\\!\n\n` +
+        `There was a problem uploading your transaction receipt photo\\.\n` +
+        `*Reason:* _${escapeMarkdownV2(err.message)}_\n\n` +
+        `⚠️ *Merchant Admin:* Please verify that your Supabase Storage contains a public bucket named \`receipts\`\\.`;
+      await telegramClient.sendMessage(shop.botToken, chatId, errorText);
+      throw err;
     }
-
-    // 5. Execute transactional checkout insertion & stock update
-    const order = await this.orderRepo.createOrderTransaction(shop.id, customer.id, {
-      totalAmount,
-      deliveryAddress: customer.address || "Telegram Order",
-      deliveryPhone: customer.phone || "00000000",
-      bankScreenshotUrl: screenshotUrl,
-      items: orderItems,
-    });
-
-    workflowService.trigger(shop.id, "ORDER_CREATED", {
-      orderId: order.id,
-      amount: totalAmount.toFixed(2),
-      customerName: `${customer.firstName || ""} ${customer.lastName || ""}`.trim(),
-      botToken: shop.botToken,
-    }).catch((err) => {
-      console.error("Workflow broker ORDER_CREATED error:", err.message);
-    });
-
-    // 6. Reset cart session and checkout steps
-    await this.customerRepo.update(shop.id, customer.id, {
-      checkoutStep: "IDLE",
-      cart: [],
-    });
-
-    // 7. Alert customer
-    const successText =
-      `✅ *Order Submitted Successfully!*\n\n` +
-      `Thank you! We received your payment receipt screenshot\\. Our administration team will verify the payment and alert you shortly\\.\n\n` +
-      `*Order ID:* \`${escapeMarkdownV2(order.id)}\``;
-
-    await telegramClient.sendMessage(shop.botToken, chatId, successText);
   }
 
   private async sendWelcomeMessage(shop: any, chatId: string | number): Promise<void> {
