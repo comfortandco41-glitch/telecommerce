@@ -8,6 +8,7 @@ import { telegramClient } from "./telegramClient";
 import { escapeMarkdownV2 } from "../utils/markdown";
 import { supabase } from "../db/supabaseClient";
 import { workflowService } from "./workflowService";
+import { prisma } from "../db/client";
 
 export class WebhookService {
   private webhookRepo = new WebhookRepository();
@@ -64,6 +65,17 @@ export class WebhookService {
   private async handleMessage(shop: any, customer: any, message: any): Promise<void> {
     const chatId = message.chat.id;
     const text = message.text;
+
+    if (text) {
+      await prisma.supportMessage.create({
+        data: {
+          shopId: shop.id,
+          customerId: customer.id,
+          sender: "CUSTOMER",
+          text,
+        },
+      });
+    }
 
     // 1. If in a questionnaire state, intercept message text inputs
     if (customer.checkoutStep && customer.checkoutStep !== "IDLE") {

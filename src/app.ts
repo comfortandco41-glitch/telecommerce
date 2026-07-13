@@ -4,10 +4,12 @@ import { WebhookController } from "./controllers/webhookController";
 import { CategoryController } from "./controllers/categoryController";
 import { ProductController } from "./controllers/productController";
 import { handleRegister, handleLogin, handleMe } from "./controllers/authController";
-import { handleGetShops, handleCreateShop } from "./controllers/shopController";
+import { handleGetShops, handleCreateShop, handleUpdateShop } from "./controllers/shopController";
 import { handleGetOrders, handleUpdateStatus } from "./controllers/orderController";
 import { handleGetCustomers } from "./controllers/customerController";
 import { handleGetBroadcasts, handleCreateBroadcast } from "./controllers/broadcastController";
+import { handleGetChatHistory, handleSendSupportMessage } from "./controllers/chatController";
+import { handleUpload } from "./controllers/uploadController";
 import { authMiddleware } from "./middlewares/authMiddleware";
 import { shopAccessMiddleware } from "./middlewares/shopAccessMiddleware";
 import { errorMiddleware } from "./middlewares/errorMiddleware";
@@ -42,6 +44,7 @@ app.post("/api/v1/auth/login", handleLogin);
 app.get("/api/v1/auth/me", authMiddleware, handleMe);
 app.get("/api/v1/shops", authMiddleware, handleGetShops);
 app.post("/api/v1/shops", authMiddleware, handleCreateShop);
+app.put("/api/v1/shops/:shopId", authMiddleware, shopAccessMiddleware, handleUpdateShop);
 
 // Category Routes (Secure)
 app.post(
@@ -103,6 +106,28 @@ app.get(
   authMiddleware,
   shopAccessMiddleware,
   handleGetCustomers
+);
+
+// Support Chat Routes (Secure)
+app.get(
+  "/api/v1/shops/:shopId/customers/:customerId/messages",
+  authMiddleware,
+  shopAccessMiddleware,
+  handleGetChatHistory
+);
+app.post(
+  "/api/v1/shops/:shopId/customers/:customerId/messages",
+  authMiddleware,
+  shopAccessMiddleware,
+  handleSendSupportMessage
+);
+
+// Image Upload Route (Secure)
+app.post(
+  "/api/v1/shops/:shopId/upload",
+  authMiddleware,
+  shopAccessMiddleware,
+  handleUpload
 );
 
 // Broadcast Routes (Secure)

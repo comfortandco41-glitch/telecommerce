@@ -5,6 +5,8 @@ import { AppError } from "../errors/appError";
 import { OrderStatus } from "@prisma/client";
 import { InvoiceService } from "../services/invoiceService";
 import { workflowService } from "../services/workflowService";
+import { telegramClient } from "../services/telegramClient";
+import { escapeMarkdownV2 } from "../utils/markdown";
 
 const orderRepo = new OrderRepository();
 
@@ -46,6 +48,18 @@ export async function handleUpdateStatus(
     const updated = await orderRepo.updateStatus(shopId, orderId, status);
 
     if (status === OrderStatus.PAID) {
+      if (order.customer && order.customer.telegramId) {
+        const confirmText =
+          `🎉 *Order Confirmed\\!* / *အော်ဒါအတည်ပြုပြီးပါပြီ\\!*\n\n` +
+          `🇬🇧 Your payment has been verified\\! Your order is now confirmed and our team is preparing it for delivery\\.\n\n` +
+          `🇲🇲 လူကြီးမင်း၏ ငွေပေးချေမှုကို အတည်ပြုပြီးပါပြီ။ သင်၏အော်ဒါကို အတည်ပြုပြီးဖြစ်၍ ပို့ဆောင်ရန် ပြင်ဆင်နေပါပြီ။\n\n` +
+          `*Order ID:* \`${escapeMarkdownV2(orderId)}\``;
+
+        telegramClient.sendMessage((order as any).shop?.botToken, order.customer.telegramId.toString(), confirmText).catch((err) => {
+          console.error("Failed to send order confirm message to customer:", err.message);
+        });
+      }
+
       const invoiceService = new InvoiceService();
       invoiceService.generateAndSendInvoice(shopId, orderId).catch((err) => {
         console.error("Background invoice compiler error:", err.message);

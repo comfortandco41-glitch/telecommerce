@@ -9,6 +9,7 @@
     "start": "node dist/src/index.js",
     "dev": "nodemon src/index.ts",
     "dev:frontend": "npm run dev --prefix dashboard",
+    "setup-webhook": "ts-node scripts/setup-webhook.ts",
     "test": "jest --runInBand --detectOpenHandles"
   },
   "dependencies": {

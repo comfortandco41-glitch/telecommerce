@@ -76,3 +76,41 @@ export async function handleGetShops(
     next(err);
   }
 }
+
+export async function handleUpdateShop(
+  req: AuthenticatedRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  const { shopId } = req.params;
+  try {
+    if (!req.merchant) {
+      return next(new AppError("Unauthorized", 401, "UNAUTHORIZED"));
+    }
+
+    const parse = shopSchema.partial().safeParse(req.body);
+    if (!parse.success) {
+      return next(new AppError("Invalid inputs", 400, "BAD_REQUEST", parse.error.format()));
+    }
+
+    // Verify merchant owns this shop
+    const shop = await prisma.shop.findFirst({
+      where: { id: shopId, merchantId: req.merchant.id },
+    });
+    if (!shop) {
+      return next(new AppError("Shop not found or access denied", 404, "NOT_FOUND"));
+    }
+
+    const updated = await prisma.shop.update({
+      where: { id: shopId },
+      data: parse.data,
+    });
+
+    res.status(200).json({
+      success: true,
+      data: updated,
+    });
+  } catch (err) {
+    next(err);
+  }
+}

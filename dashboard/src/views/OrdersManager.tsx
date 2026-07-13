@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
-import { Search, Eye, X, Check, Trash } from "lucide-react";
+import { Search, Eye, X } from "lucide-react";
 
 export function OrdersManager() {
   const { selectedShopId } = useOutletContext<{ selectedShopId: string }>();
@@ -273,29 +273,25 @@ export function OrdersManager() {
               </div>
             </div>
 
-            {/* Actions for Pending Verification state */}
-            {selectedOrder.status === "PENDING_VERIFICATION" && (
-              <div className="drawer-actions">
-                <button
-                  onClick={() => handleUpdateStatus(selectedOrder.id, "CANCELLED")}
-                  className="btn btn-danger flex-gap-12"
-                  style={{ flex: 1 }}
+            {/* Actions for updating order status */}
+            <div className="drawer-actions" style={{ padding: "20px 24px", borderTop: "1px solid var(--border-color)", width: "100%" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px", width: "100%" }}>
+                <label className="form-label" style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>Update Order Status</label>
+                <select
+                  className="form-input"
+                  style={{ width: "100%" }}
+                  value={selectedOrder.status}
+                  onChange={(e) => handleUpdateStatus(selectedOrder.id, e.target.value)}
                   disabled={actionLoading}
                 >
-                  <Trash size={16} />
-                  <span>Reject</span>
-                </button>
-                <button
-                  onClick={() => handleUpdateStatus(selectedOrder.id, "PAID")}
-                  className="btn btn-success flex-gap-12"
-                  style={{ flex: 1 }}
-                  disabled={actionLoading}
-                >
-                  <Check size={16} />
-                  <span>Approve Payment</span>
-                </button>
+                  <option value="PENDING">PENDING</option>
+                  <option value="PENDING_VERIFICATION">PENDING VERIFICATION</option>
+                  <option value="PAID">PAID (Approve Payment & Send Invoice)</option>
+                  <option value="SHIPPED">SHIPPED</option>
+                  <option value="CANCELLED">CANCELLED</option>
+                </select>
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}

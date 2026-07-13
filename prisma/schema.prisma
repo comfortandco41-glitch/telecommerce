@@ -50,6 +50,7 @@ model Shop {
   broadcasts          Broadcast[]
   webhookLogs         WebhookLog[]
   workflows           Workflow[]
+  supportMessages     SupportMessage[]
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
 }
@@ -100,9 +101,10 @@ model Customer {
   address      String?  @db.Text
   checkoutStep String   @default("IDLE")
   cart         Json?
-  orders       Order[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  orders          Order[]
+  supportMessages SupportMessage[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@unique([shopId, telegramId])
   @@index([shopId])
@@ -179,4 +181,19 @@ model Workflow {
   createdAt DateTime @default(now())
 
   @@index([shopId, trigger])
+}
+
+model SupportMessage {
+  id         String   @id @default(uuid())
+  shopId     String
+  customerId String
+  sender     String   // "ADMIN" or "CUSTOMER"
+  text       String   @db.Text
+  createdAt  DateTime @default(now())
+
+  shop       Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([shopId, customerId])
+  @@index([createdAt])
 }

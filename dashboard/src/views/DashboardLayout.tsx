@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ShoppingCart, Package, LogOut, Plus, Megaphone } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Package, LogOut, Plus, Megaphone, MessageSquare, Settings2 } from "lucide-react";
 
 export function DashboardLayout() {
   const navigate = useNavigate();
@@ -154,6 +154,20 @@ export function DashboardLayout() {
           >
             <Megaphone size={18} />
             <span>Broadcasts</span>
+          </Link>
+          <Link
+            to="/chat"
+            className={`sidebar-item ${location.pathname.startsWith("/chat") ? "active" : ""}`}
+          >
+            <MessageSquare size={18} />
+            <span>Support Chat</span>
+          </Link>
+          <Link
+            to="/settings"
+            className={`sidebar-item ${location.pathname.startsWith("/settings") ? "active" : ""}`}
+          >
+            <Settings2 size={18} />
+            <span>Settings</span>
           </Link>
         </nav>
 

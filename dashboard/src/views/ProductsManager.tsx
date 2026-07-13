@@ -24,6 +24,10 @@ export function ProductsManager() {
   const [newProdCatId, setNewProdCatId] = useState("");
   const [prodLoading, setProdLoading] = useState(false);
   const [prodError, setProdError] = useState("");
+  
+  // Image Upload states
+  const [newProdImage, setNewProdImage] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Edit stock inline states
   const [editingStockId, setEditingStockId] = useState<string | null>(null);
@@ -31,6 +35,48 @@ export function ProductsManager() {
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:10000";
   const token = localStorage.getItem("token");
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 200 * 1024) {
+      alert("File exceeds 200KB limit! Please select a smaller photo.");
+      e.target.value = "";
+      return;
+    }
+
+    setUploadingImage(true);
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = reader.result as string;
+      try {
+        const res = await fetch(`${API_URL}/api/v1/shops/${selectedShopId}/upload`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            fileName: file.name,
+            fileData: base64,
+          }),
+        });
+        const json = await res.json();
+        if (res.ok && json.success) {
+          setNewProdImage(json.data.url);
+        } else {
+          alert(json.message || "Failed to upload image.");
+        }
+      } catch (err) {
+        console.error("Upload error:", err);
+        alert("Network error uploading image");
+      } finally {
+        setUploadingImage(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const fetchData = async () => {
     if (!selectedShopId) return;
@@ -118,7 +164,7 @@ export function ProductsManager() {
           description: newProdDesc,
           price: Number(newProdPrice),
           stock: Number(newProdStock),
-          images: [],
+          images: newProdImage ? [newProdImage] : [],
         }),
       });
 
@@ -132,6 +178,7 @@ export function ProductsManager() {
       setNewProdDesc("");
       setNewProdPrice("");
       setNewProdStock("");
+      setNewProdImage("");
       setShowProductModal(false);
     } catch (err: any) {
       setProdError(err.message || "Failed to save product catalog record");
@@ -448,6 +495,32 @@ export function ProductsManager() {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="form-group" style={{ marginTop: "16px" }}>
+                <label className="form-label">Product Image Photo (Max 200KB)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="form-input"
+                  style={{ padding: "8px", fontSize: "13px" }}
+                  disabled={uploadingImage}
+                />
+                {uploadingImage && (
+                  <span style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "4px", display: "block" }}>
+                    Uploading file...
+                  </span>
+                )}
+                {newProdImage && (
+                  <div style={{ marginTop: "8px" }}>
+                    <img
+                      src={newProdImage}
+                      alt="Uploaded product preview"
+                      style={{ height: "60px", width: "80px", objectFit: "cover", borderRadius: "6px", border: "1px solid var(--border-color)" }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
