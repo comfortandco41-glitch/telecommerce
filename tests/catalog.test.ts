@@ -160,7 +160,7 @@ describe("Phase 2 Catalog - REST Endpoints and Bot Flows", () => {
         expect.objectContaining({
           inline_keyboard: expect.arrayContaining([
             expect.arrayContaining([
-              expect.objectContaining({ text: "🛍️ Launch WebApp Storefront" }),
+              expect.objectContaining({ text: "💬 Customer Support / စုံစမ်းမေးမြန်းရန်" }),
             ]),
             expect.arrayContaining([
               expect.objectContaining({ text: "Vinyls", callback_data: "cat:cat-1" }),

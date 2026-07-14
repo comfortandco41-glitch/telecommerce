@@ -122,6 +122,8 @@ export class WebhookService {
       await this.transitionToAwaitingReceipt(shop, customer, chatId);
     } else if (data === "edit_details") {
       await this.askForName(shop, customer, chatId);
+    } else if (data === "customer_support") {
+      await this.handleCustomerSupportTrigger(shop, customer, chatId);
     }
   }
 
@@ -244,22 +246,27 @@ export class WebhookService {
     const inlineKeyboard = [
       [
         {
-          text: "🛒 View Cart & Checkout",
+          text: "🛒 View Cart & Checkout / စျေးခြင်းတောင်းကြည့်ရန်",
           callback_data: "cart_view",
         },
       ],
       [
         {
-          text: "⬅️ Keep Shopping",
+          text: "⬅️ Keep Shopping / ဆက်လက်ဝယ်ယူရန်",
           callback_data: "back_categories",
         },
       ],
     ];
 
+    const successText =
+      `🛒 *Added to Cart\\!* / *စျေးခြင်းတောင်းထဲထည့်ပြီးပါပြီ\\!*\n\n` +
+      `🇬🇧 *"${escapeMarkdownV2(product.name)}"* has been added to your shopping cart\\.\n` +
+      `🇲🇲 *"${escapeMarkdownV2(product.name)}"* ကို စျေးခြင်းတောင်းထဲသို့ ထည့်ပြီးပါပြီ။`;
+
     await telegramClient.sendMessage(
       shop.botToken,
       chatId,
-      escapeMarkdownV2(`"${product.name}" added to cart!`),
+      successText,
       {
         inline_keyboard: inlineKeyboard,
       }
@@ -293,15 +300,15 @@ export class WebhookService {
   private async showCart(shop: any, customer: any, chatId: string | number): Promise<void> {
     const cart = (customer.cart as any[]) || [];
     if (cart.length === 0) {
-      await telegramClient.sendMessage(
-        shop.botToken,
-        chatId,
-        escapeMarkdownV2("Your shopping cart is empty.")
-      );
+      const emptyText =
+        `🛒 *Cart is Empty\\!* / *ခြင်းတောင်းထဲတွင် ပစ္စည်းမရှိပါ\\!*\n\n` +
+        `🇬🇧 Your shopping cart is empty\\. Please select products first\\.\n` +
+        `🇲🇲 စျေးခြင်းတောင်းထဲတွင် မည်သည့်ပစ္စည်းမှမရှိသေးပါ။ ကျေးဇူးပြု၍ ပစ္စည်းများအရင်ရွေးချယ်ပါ။`;
+      await telegramClient.sendMessage(shop.botToken, chatId, emptyText);
       return;
     }
 
-    let text = "*Your Shopping Cart:*\n\n";
+    let text = `🛒 *Your Shopping Cart:* / *သင်၏ စျေးခြင်းတောင်း:*\n\n`;
     let total = 0;
     const inlineKeyboard: any[] = [];
 
@@ -310,7 +317,7 @@ export class WebhookService {
       if (product) {
         const itemSum = Number(product.price) * item.quantity;
         total += itemSum;
-        text += `• *${escapeMarkdownV2(product.name)}* x${item.quantity} \\= ${escapeMarkdownV2(shop.currency)}${escapeMarkdownV2(itemSum.toString())}\n`;
+        text += `• *${escapeMarkdownV2(product.name)}* x${item.quantity} \\= ${escapeMarkdownV2(shop.currency)} ${escapeMarkdownV2(itemSum.toString())}\n`;
         
         inlineKeyboard.push([
           {
@@ -325,11 +332,11 @@ export class WebhookService {
       }
     }
 
-    text += `\n*Total Sum: ${escapeMarkdownV2(shop.currency)}${escapeMarkdownV2(total.toString())}*`;
+    text += `\n*Total Sum:* / *စုစုပေါင်းကျသင့်ငွေ:* *${escapeMarkdownV2(shop.currency)} ${escapeMarkdownV2(total.toString())}*`;
 
     inlineKeyboard.push([
       {
-        text: "🏁 Proceed to Checkout",
+        text: "🏁 Proceed to Checkout / ငွေရှင်းမည်",
         callback_data: "checkout_start",
       },
     ]);
@@ -342,32 +349,32 @@ export class WebhookService {
   private async startCheckout(shop: any, customer: any, chatId: string | number): Promise<void> {
     const cart = (customer.cart as any[]) || [];
     if (cart.length === 0) {
-      await telegramClient.sendMessage(
-        shop.botToken,
-        chatId,
-        escapeMarkdownV2("Your cart is empty. Please select products first.")
-      );
+      const emptyText =
+        `🛒 *Cart is Empty\\!* / *ခြင်းတောင်းထဲတွင် ပစ္စည်းမရှိပါ\\!*\n\n` +
+        `🇬🇧 Your shopping cart is empty\\. Please select products first\\.\n` +
+        `🇲🇲 စျေးခြင်းတောင်းထဲတွင် မည်သည့်ပစ္စည်းမှမရှိသေးပါ။ ကျေးဇူးပြု၍ ပစ္စည်းများအရင်ရွေးချယ်ပါ။`;
+      await telegramClient.sendMessage(shop.botToken, chatId, emptyText);
       return;
     }
 
     // Check if details exist
     if (customer.firstName && customer.address && customer.phone) {
       const confirmationText =
-        `Confirm delivery details:\n\n` +
-        `Name: *${escapeMarkdownV2(customer.firstName)}*\n` +
-        `Address: *${escapeMarkdownV2(customer.address)}*\n` +
-        `Phone: *${escapeMarkdownV2(customer.phone)}*`;
+        `📋 *Confirm delivery details:* / *ပို့ဆောင်မည့်လိပ်စာအတည်ပြုရန်:*\n\n` +
+        `👤 Name: *${escapeMarkdownV2(customer.firstName)}*\n` +
+        `📍 Address: *${escapeMarkdownV2(customer.address)}*\n` +
+        `📞 Phone: *${escapeMarkdownV2(customer.phone)}*`;
 
       const inlineKeyboard = [
         [
           {
-            text: "✅ Yes, Use Stored Details",
+            text: "✅ Yes, Use Stored Details / ဟုတ်ကဲ့၊ ယခင်အချက်အလက်သုံးမည်",
             callback_data: "use_stored_details",
           },
         ],
         [
           {
-            text: "❌ No, Edit Details",
+            text: "❌ No, Edit Details / အသစ်ပြင်ဆင်မည်",
             callback_data: "edit_details",
           },
         ],
@@ -385,11 +392,11 @@ export class WebhookService {
     await this.customerRepo.update(shop.id, customer.id, {
       checkoutStep: "AWAITING_NAME",
     });
-    await telegramClient.sendMessage(
-      shop.botToken,
-      chatId,
-      escapeMarkdownV2("Please enter your Full Name:")
-    );
+    const promptText =
+      `👤 *Checkout:* Enter Name / *အမည်ရိုက်ထည့်ရန်:*\n\n` +
+      `🇬🇧 Please type your full name in the chat below:\n` +
+      `🇲🇲 လူကြီးမင်း၏ အမည်အပြည့်အစုံကို အောက်တွင် ရိုက်ထည့်ပေးပါ:`;
+    await telegramClient.sendMessage(shop.botToken, chatId, promptText);
   }
 
   private async transitionToAwaitingReceipt(
@@ -419,10 +426,12 @@ export class WebhookService {
     }
 
     const instructionText =
-      `*Order Total: ${escapeMarkdownV2(shop.currency)}${escapeMarkdownV2(total.toString())}*\n\n` +
-      `Please make bank transfer using the instructions below:\n` +
+      `💸 *Order Total:* / *စုစုပေါင်းကျသင့်ငွေ:* *${escapeMarkdownV2(shop.currency)} ${escapeMarkdownV2(total.toString())}*\n\n` +
+      `🇬🇧 Please make bank transfer using the instructions below:\n` +
+      `🇲🇲 ကျေးဇူးပြု၍ အောက်ပါအချက်အလက်များအတိုင်း ငွေလွှဲပေးပါရန်:\n` +
       `\`\`\`\n${shop.paymentInstructions}\n\`\`\`\n\n` +
-      `⚠️ Once transfer is complete, please upload the transaction receipt PHOTO directly in this chat window:`;
+      `📸 *English:* Once transfer is complete, please upload the transaction receipt PHOTO directly in this chat window:\n` +
+      `📸 *မြန်မာ:* ငွေလွှဲပြီးပါက ငွေလွှဲပြေစာ (စခရင်ရှော့) ဓာတ်ပုံကို ဤချက်တွင် တိုက်ရိုက် ပေးပို့ပေးပါရန်:`;
 
     await telegramClient.sendMessage(shop.botToken, chatId, instructionText);
   }
@@ -522,7 +531,7 @@ export class WebhookService {
     const activeCategories = await this.categoryRepo.listActiveByShopId(shop.id);
     const welcomeText = escapeMarkdownV2(shop.welcomeMessage || "Welcome to our shop!");
 
-    const inlineKeyboard = this.buildCategoriesKeyboard(shop.id, activeCategories);
+    const inlineKeyboard = this.buildCategoriesKeyboard(activeCategories);
 
     await telegramClient.sendMessage(shop.botToken, chatId, welcomeText, {
       inline_keyboard: inlineKeyboard,
@@ -533,10 +542,32 @@ export class WebhookService {
     const activeCategories = await this.categoryRepo.listActiveByShopId(shop.id);
     const welcomeText = escapeMarkdownV2(shop.welcomeMessage || "Welcome to our shop!");
 
-    const inlineKeyboard = this.buildCategoriesKeyboard(shop.id, activeCategories);
+    const inlineKeyboard = this.buildCategoriesKeyboard(activeCategories);
 
     await telegramClient.editMessageText(shop.botToken, chatId, messageId, welcomeText, {
       inline_keyboard: inlineKeyboard,
+    });
+  }
+
+  private async handleCustomerSupportTrigger(
+    shop: any,
+    customer: any,
+    chatId: string | number
+  ): Promise<void> {
+    const text =
+      `💬 *Customer Support / လူကြီးမင်းတို့သိလိုသည်များကိုမေးမြန်းနိုင်ပါသည်*\n\n` +
+      `🇬🇧 Please type your message here in the chat\\. Our team will get back to you shortly\\!\n` +
+      `🇲🇲 မေးခွန်းများကို ဤနေရာတွင် တိုက်ရိုက်ရိုက်နှိပ်မေးမြန်းနိုင်ပါသည်။ အက်ဒမင်မှ မကြာမီ ပြန်လည်ဖြေကြားပေးပါမည်။`;
+    await telegramClient.sendMessage(shop.botToken, chatId, text);
+
+    // Write a system alert to the database to populate the dashboard chat list
+    await prisma.supportMessage.create({
+      data: {
+        shopId: shop.id,
+        customerId: customer.id,
+        sender: "CUSTOMER",
+        text: "⚡ [System Alert: Customer clicked 'Customer Support' button / စုံစမ်းမေးမြန်းရန် ခလုတ်ကို နှိပ်လိုက်ပါသည်]",
+      },
     });
   }
 
@@ -625,15 +656,13 @@ export class WebhookService {
     });
   }
 
-  private buildCategoriesKeyboard(shopId: string, categories: any[]): any[] {
+  private buildCategoriesKeyboard(categories: any[]): any[] {
     const keyboard: any[] = [];
     
     keyboard.push([
       {
-        text: "🛍️ Launch WebApp Storefront",
-        web_app: {
-          url: `https://storefront.superbot.app/shop/${shopId}`,
-        },
+        text: "💬 Customer Support / စုံစမ်းမေးမြန်းရန်",
+        callback_data: "customer_support",
       },
     ]);
 
