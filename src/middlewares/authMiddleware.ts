@@ -8,6 +8,8 @@ export interface AuthenticatedRequest extends Request {
     id: string;
     email: string;
     name: string;
+    subscriptionStatus?: string;
+    subscriptionExpiresAt?: Date | null;
   };
 }
 
@@ -37,6 +39,8 @@ export async function authMiddleware(
       id: merchant.id,
       email: merchant.email,
       name: merchant.name,
+      subscriptionStatus: merchant.subscriptionStatus,
+      subscriptionExpiresAt: merchant.subscriptionExpiresAt,
     };
     next();
   } catch (err) {

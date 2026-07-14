@@ -85,6 +85,12 @@ app.put(
   shopAccessMiddleware,
   productController.updateProduct
 );
+app.delete(
+  "/api/v1/shops/:shopId/products/:productId",
+  authMiddleware,
+  shopAccessMiddleware,
+  productController.deleteProduct
+);
 
 // Order Routes (Secure)
 app.get(

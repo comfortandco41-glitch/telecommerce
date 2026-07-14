@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
-import { Plus, Search, ToggleLeft, ToggleRight, Check } from "lucide-react";
+import { Plus, Search, ToggleLeft, ToggleRight, Check, Edit, Trash2 } from "lucide-react";
 
 export function ProductsManager() {
   const { selectedShopId } = useOutletContext<{ selectedShopId: string }>();
@@ -24,6 +24,9 @@ export function ProductsManager() {
   const [newProdCatId, setNewProdCatId] = useState("");
   const [prodLoading, setProdLoading] = useState(false);
   const [prodError, setProdError] = useState("");
+  
+  // Edit & Delete Product states
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
   
   // Image Upload states
   const [newProdImage, setNewProdImage] = useState("");
@@ -142,7 +145,55 @@ export function ProductsManager() {
     }
   };
 
-  const handleCreateProduct = async (e: React.FormEvent) => {
+  const handleOpenAddModal = () => {
+    setEditingProduct(null);
+    setNewProdName("");
+    setNewProdDesc("");
+    setNewProdPrice("");
+    setNewProdStock("");
+    setNewProdImage("");
+    setProdError("");
+    if (categories.length > 0) {
+      setNewProdCatId(categories[0].id);
+    }
+    setShowProductModal(true);
+  };
+
+  const handleStartEditProduct = (prod: any) => {
+    setEditingProduct(prod);
+    setNewProdName(prod.name);
+    setNewProdDesc(prod.description || "");
+    setNewProdPrice(prod.price.toString());
+    setNewProdStock(prod.stock.toString());
+    setNewProdCatId(prod.categoryId);
+    setNewProdImage(prod.images?.[0] || "");
+    setProdError("");
+    setShowProductModal(true);
+  };
+
+  const handleDeleteProduct = async (productId: string) => {
+    if (!confirm("Are you sure you want to delete this product? / ဤပစ္စည်းကို ဖျက်ရန် သေချာပါသလား?")) return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/v1/shops/${selectedShopId}/products/${productId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setProducts(products.filter((p) => p.id !== productId));
+      } else {
+        alert(json.message || "Failed to delete product");
+      }
+    } catch (err) {
+      console.error("Failed to delete product", err);
+      alert("Network error deleting product");
+    }
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setProdError("");
     if (!newProdCatId) {
@@ -151,34 +202,58 @@ export function ProductsManager() {
     }
     setProdLoading(true);
 
-    try {
-      const res = await fetch(`${API_URL}/api/v1/shops/${selectedShopId}/products`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          categoryId: newProdCatId,
-          name: newProdName,
-          description: newProdDesc,
-          price: Number(newProdPrice),
-          stock: Number(newProdStock),
-          images: newProdImage ? [newProdImage] : [],
-        }),
-      });
+    const payload = {
+      categoryId: newProdCatId,
+      name: newProdName,
+      description: newProdDesc,
+      price: Number(newProdPrice),
+      stock: Number(newProdStock),
+      images: newProdImage ? [newProdImage] : [],
+    };
 
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.message || "Failed to create product");
+    try {
+      if (editingProduct) {
+        // Edit product
+        const res = await fetch(`${API_URL}/api/v1/shops/${selectedShopId}/products/${editingProduct.id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json.message || "Failed to update product");
+        }
+
+        setProducts(products.map((p) => (p.id === editingProduct.id ? json.data : p)));
+      } else {
+        // Create new
+        const res = await fetch(`${API_URL}/api/v1/shops/${selectedShopId}/products`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json.message || "Failed to create product");
+        }
+
+        setProducts([...products, json.data]);
       }
 
-      setProducts([...products, json.data]);
       setNewProdName("");
       setNewProdDesc("");
       setNewProdPrice("");
       setNewProdStock("");
       setNewProdImage("");
+      setEditingProduct(null);
       setShowProductModal(false);
     } catch (err: any) {
       setProdError(err.message || "Failed to save product catalog record");
@@ -245,7 +320,7 @@ export function ProductsManager() {
             <h2 className="page-title">Product Catalog</h2>
             <p className="page-subtitle">Add products, edit details, and modify inventory quantities</p>
           </div>
-          <button onClick={() => setShowProductModal(true)} className="btn btn-primary flex-gap-12">
+          <button onClick={handleOpenAddModal} className="btn btn-primary flex-gap-12">
             <Plus size={16} />
             <span>Add Product</span>
           </button>
@@ -280,6 +355,7 @@ export function ProductsManager() {
                     <th>Price</th>
                     <th>Stock</th>
                     <th>Active</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -334,6 +410,24 @@ export function ProductsManager() {
                           >
                             {p.isActive ? <ToggleRight size={24} /> : <ToggleLeft size={24} />}
                           </button>
+                        </td>
+                        <td>
+                          <div className="flex-gap-12" style={{ display: "flex", gap: "8px" }}>
+                            <button
+                              onClick={() => handleStartEditProduct(p)}
+                              style={{ background: "transparent", border: "none", color: "var(--accent-color)", cursor: "pointer" }}
+                              title="Edit product"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProduct(p.id)}
+                              style={{ background: "transparent", border: "none", color: "var(--danger-color)", cursor: "pointer" }}
+                              title="Delete product"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -420,7 +514,9 @@ export function ProductsManager() {
       {showProductModal && (
         <div className="drawer-backdrop" style={{ justifyContent: "center", alignItems: "center" }}>
           <div className="glass-card" style={{ width: "480px", padding: "32px" }}>
-            <h3 style={{ margin: "0 0 20px", fontSize: "18px", fontWeight: "700" }}>Add New Product Item</h3>
+            <h3 style={{ margin: "0 0 20px", fontSize: "18px", fontWeight: "700" }}>
+              {editingProduct ? "Edit Product Item" : "Add New Product Item"}
+            </h3>
             
             {prodError && (
               <div style={{ padding: "10px", color: "var(--danger-color)", background: "var(--danger-bg)", border: "1px solid var(--danger-border)", borderRadius: "8px", fontSize: "13px", marginBottom: "16px" }}>
@@ -428,7 +524,7 @@ export function ProductsManager() {
               </div>
             )}
 
-            <form onSubmit={handleCreateProduct}>
+            <form onSubmit={handleFormSubmit}>
               <div className="form-group">
                 <label className="form-label">Category Selection</label>
                 <select
@@ -537,7 +633,7 @@ export function ProductsManager() {
                   className="btn btn-primary"
                   disabled={prodLoading}
                 >
-                  {prodLoading ? "Saving..." : "Add Product"}
+                  {prodLoading ? "Saving..." : (editingProduct ? "Save Changes" : "Add Product")}
                 </button>
               </div>
             </form>

@@ -19,11 +19,14 @@ export class MerchantRepository {
     passwordHash: string;
     name: string;
   }): Promise<Merchant> {
+    const trialExpiry = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
     return prisma.merchant.create({
       data: {
         email: data.email,
         passwordHash: data.passwordHash,
         name: data.name,
+        subscriptionStatus: "TRIAL",
+        subscriptionExpiresAt: trialExpiry,
       },
     });
   }

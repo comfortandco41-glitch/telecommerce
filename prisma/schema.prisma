@@ -23,13 +23,15 @@ enum BroadcastStatus {
 }
 
 model Merchant {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String
-  name         String
-  shops        Shop[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                    String   @id @default(uuid())
+  email                 String   @unique
+  passwordHash          String
+  name                  String
+  subscriptionStatus    String   @default("TRIAL")
+  subscriptionExpiresAt DateTime?
+  shops                 Shop[]
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
 model Shop {

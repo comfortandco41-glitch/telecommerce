@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ShoppingCart, Package, LogOut, Plus, Megaphone, MessageSquare, Settings2 } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Package, LogOut, Plus, Megaphone, MessageSquare, Settings2, CreditCard } from "lucide-react";
 
 export function DashboardLayout() {
   const navigate = useNavigate();
@@ -168,6 +168,13 @@ export function DashboardLayout() {
           >
             <Settings2 size={18} />
             <span>Settings</span>
+          </Link>
+          <Link
+            to="/subscription"
+            className={`sidebar-item ${location.pathname.startsWith("/subscription") ? "active" : ""}`}
+          >
+            <CreditCard size={18} />
+            <span>Subscription</span>
           </Link>
         </nav>
 

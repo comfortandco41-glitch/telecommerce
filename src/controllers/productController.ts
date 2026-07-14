@@ -86,4 +86,24 @@ export class ProductController {
       next(err);
     }
   };
+
+  public deleteProduct = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { shopId, productId } = req.params;
+
+      if (!shopId || !productId) {
+        throw new ValidationError("shopId and productId are required");
+      }
+
+      const productService = new ProductService(shopId);
+      const deleted = await productService.deleteProduct(productId);
+
+      res.status(200).json({
+        success: true,
+        data: deleted,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 }

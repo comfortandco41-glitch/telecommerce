@@ -80,4 +80,10 @@ export class ProductRepository {
       },
     });
   }
+
+  async delete(_shopId: string, id: string): Promise<Product> {
+    return prisma.product.delete({
+      where: { id },
+    });
+  }
 }

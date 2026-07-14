@@ -8,6 +8,7 @@ import { ProductsManager } from "./views/ProductsManager";
 import { BroadcastComposer } from "./views/BroadcastComposer";
 import { ChatManager } from "./views/ChatManager";
 import { Settings } from "./views/Settings";
+import { Subscription } from "./views/Subscription";
 
 function ProtectedRoute({ children }: { children: React.ReactElement }) {
   const token = localStorage.getItem("token");
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="broadcasts" element={<BroadcastComposer />} />
           <Route path="chat" element={<ChatManager />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="subscription" element={<Subscription />} />
           <Route path="*" element={<Navigate to="/overview" replace />} />
         </Route>
       </Routes>

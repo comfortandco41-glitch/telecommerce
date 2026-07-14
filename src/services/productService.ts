@@ -113,4 +113,9 @@ export class ProductService {
       isActive: data.isActive,
     });
   }
+
+  async deleteProduct(id: string): Promise<Product> {
+    await this.getProduct(id);
+    return this.productRepo.delete(this.shopId, id);
+  }
 }
