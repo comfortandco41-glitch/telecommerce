@@ -205,13 +205,15 @@ export function DashboardLayout() {
             ) : (
               <span style={{ fontSize: "14px", color: "var(--text-secondary)" }}>No active shops</span>
             )}
-            <button
-              onClick={() => setShowCreateModal(true)}
-              className="btn btn-secondary btn-sm flex-gap-12"
-            >
-              <Plus size={14} />
-              <span>New Shop</span>
-            </button>
+            {shops.length === 0 && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="btn btn-secondary btn-sm flex-gap-12"
+              >
+                <Plus size={14} />
+                <span>New Shop</span>
+              </button>
+            )}
           </div>
 
           <div className="header-user-section">

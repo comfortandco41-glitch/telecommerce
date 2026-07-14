@@ -31,6 +31,12 @@ export async function handleCreateShop(
       return next(new AppError("Invalid inputs", 400, "BAD_REQUEST", parse.error.format()));
     }
 
+    // Enforce 1 shop limit per merchant account
+    const existingShops = await shopRepo.listByMerchantId(req.merchant.id);
+    if (existingShops.length >= 1) {
+      return next(new AppError("Only one shop is allowed per merchant account.", 400, "BAD_REQUEST"));
+    }
+
     const { botToken, name, currency, paymentInstructions, welcomeMessage } = parse.data;
 
     const existing = await shopRepo.getByToken(botToken);
