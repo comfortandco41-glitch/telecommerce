@@ -230,7 +230,7 @@ export function DashboardLayout() {
 
         {/* Content Outlet */}
         {shops.length > 0 ? (
-          <Outlet context={{ selectedShopId }} />
+          <Outlet context={{ selectedShopId, shops }} />
         ) : (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px", textAlign: "center" }}>
             <div className="glass-card" style={{ maxWidth: "450px" }}>

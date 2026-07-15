@@ -3,7 +3,9 @@ import { useOutletContext } from "react-router-dom";
 import { Plus, Search, ToggleLeft, ToggleRight, Check, Edit, Trash2 } from "lucide-react";
 
 export function ProductsManager() {
-  const { selectedShopId } = useOutletContext<{ selectedShopId: string }>();
+  const { selectedShopId, shops } = useOutletContext<{ selectedShopId: string; shops: any[] }>();
+  const activeShop = shops?.find((s) => s.id === selectedShopId);
+  const currencySymbol = activeShop?.currency || "USD";
   
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
@@ -368,7 +370,7 @@ export function ProductsManager() {
                         <td style={{ fontSize: "13px", color: "var(--text-secondary)" }}>
                           {categoryName}
                         </td>
-                        <td style={{ fontWeight: "600" }}>${Number(p.price).toFixed(2)}</td>
+                        <td style={{ fontWeight: "600" }}>{currencySymbol} {Number(p.price).toFixed(2)}</td>
                         <td>
                           {editingStockId === p.id ? (
                             <div className="flex-gap-12" style={{ width: "110px" }}>
@@ -568,7 +570,7 @@ export function ProductsManager() {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div className="form-group">
-                  <label className="form-label">Price (USD)</label>
+                  <label className="form-label">Price ({currencySymbol})</label>
                   <input
                     type="number"
                     step="0.01"

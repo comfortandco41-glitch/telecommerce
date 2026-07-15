@@ -3,7 +3,10 @@ import { useOutletContext } from "react-router-dom";
 import { DollarSign, Users, BarChart3, AlertCircle } from "lucide-react";
 
 export function Overview() {
-  const { selectedShopId } = useOutletContext<{ selectedShopId: string }>();
+  const { selectedShopId, shops } = useOutletContext<{ selectedShopId: string; shops: any[] }>();
+  const activeShop = shops?.find((s) => s.id === selectedShopId);
+  const currencySymbol = activeShop?.currency || "USD";
+
   const [orders, setOrders] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -116,7 +119,7 @@ export function Overview() {
             <span className="metric-label">Total Revenue</span>
             <DollarSign size={18} style={{ color: "var(--accent-color)" }} />
           </div>
-          <h3 className="metric-value">${totalRevenue.toFixed(2)}</h3>
+          <h3 className="metric-value">{currencySymbol} {totalRevenue.toFixed(2)}</h3>
           <div className="metric-footer">
             <span className="metric-trend-up">★ Paid orders sum</span>
           </div>
@@ -198,7 +201,7 @@ export function Overview() {
               />
               <span className="chart-bar-label">{data.day}</span>
               <span style={{ fontSize: "11px", fontWeight: "600", marginTop: "2px" }}>
-                {data.amount > 0 ? `$${data.amount.toFixed(0)}` : "-"}
+                {data.amount > 0 ? `${currencySymbol} ${data.amount.toFixed(0)}` : "-"}
               </span>
             </div>
           ))}
