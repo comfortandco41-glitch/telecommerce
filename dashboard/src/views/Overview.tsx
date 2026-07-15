@@ -49,15 +49,20 @@ export function Overview() {
     };
   }, [selectedShopId]);
 
-  // Calculations
-  const paidOrders = orders.filter((o) => o.status === "PAID");
+  // Calculations: Real sales include both PAID and SHIPPED orders
+  const paidOrders = orders.filter((o) => o.status === "PAID" || o.status === "SHIPPED");
   const totalRevenue = paidOrders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
   
   const activeCustomerCount = customers.length;
   
+  // Real conversion rate: Unique customer accounts who purchased at least once / total customer audience
+  const purchasingCustomerIds = new Set(
+    paidOrders.map((o) => o.customerId).filter(Boolean)
+  );
+  
   const conversionRate =
     activeCustomerCount > 0
-      ? ((paidOrders.length / activeCustomerCount) * 100).toFixed(1)
+      ? ((purchasingCustomerIds.size / activeCustomerCount) * 100).toFixed(1)
       : "0.0";
 
   const pendingVerificationCount = orders.filter(
