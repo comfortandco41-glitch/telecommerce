@@ -7,7 +7,7 @@ const rl = readline.createInterface({
 });
 
 console.log("==========================================");
-console.log(" SuperBot - Telegram Webhook Configurator ");
+console.log(" Tele-Commerce - Telegram Webhook Configurator ");
 console.log("==========================================\n");
 
 rl.question("1. Enter your Telegram Bot API Token: ", (botToken) => {

@@ -1,7 +1,7 @@
 {
   "name": "superbot-backend",
   "version": "0.1.0",
-  "description": "SuperBot Multi-Tenant Telegram Shop SaaS Backend",
+  "description": "Tele-Commerce Multi-Tenant Telegram Shop SaaS Backend",
   "main": "dist/src/index.js",
   "scripts": {
     "build": "tsc",

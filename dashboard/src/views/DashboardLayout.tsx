@@ -125,7 +125,7 @@ export function DashboardLayout() {
     <div className="dashboard-container">
       {/* Sidebar navigation */}
       <aside className="sidebar">
-        <div className="sidebar-logo">SuperBot</div>
+        <div className="sidebar-logo">Tele-Commerce</div>
         <nav className="sidebar-nav">
           <Link
             to="/overview"
@@ -234,7 +234,7 @@ export function DashboardLayout() {
         ) : (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px", textAlign: "center" }}>
             <div className="glass-card" style={{ maxWidth: "450px" }}>
-              <h3 style={{ margin: "0 0 12px", fontSize: "20px", fontWeight: "700" }}>Welcome to SuperBot!</h3>
+              <h3 style={{ margin: "0 0 12px", fontSize: "20px", fontWeight: "700" }}>Welcome to Tele-Commerce!</h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "14px", lineHeight: "1.6", marginBottom: "24px" }}>
                 You haven't initialized any shop bots yet. Create your first shop bot below to start selling products inside Telegram.
               </p>

@@ -51,7 +51,7 @@ export function Login() {
     <div className="auth-page">
       <div className="glass-card auth-card">
         <div className="auth-header">
-          <h2 className="auth-title">SuperBot</h2>
+          <h2 className="auth-title">Tele-Commerce</h2>
           <p className="auth-subtitle">
             {isRegister ? "Register a Merchant Account" : "Log in to Shop Dashboard"}
           </p>
@@ -119,7 +119,7 @@ export function Login() {
         </form>
 
         <div style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", color: "var(--text-secondary)" }}>
-          {isRegister ? "Already have an account?" : "New to SuperBot?"}{" "}
+          {isRegister ? "Already have an account?" : "New to Tele-Commerce?"}{" "}
           <span
             style={{ color: "var(--accent-color)", cursor: "pointer", fontWeight: "600" }}
             onClick={() => {
