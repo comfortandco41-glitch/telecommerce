@@ -101,6 +101,11 @@ export class WebhookService {
       console.error("Failed to answer callback query:", err.message);
     });
 
+    // Reset checkout step to IDLE if user interacts with catalog buttons
+    if (customer.checkoutStep !== "IDLE") {
+      await this.customerRepo.update(shop.id, customer.id, { checkoutStep: "IDLE" });
+    }
+
     if (data === "back_categories") {
       await this.editMessageToWelcome(shop, chatId, messageId);
     } else if (data.startsWith("cat:")) {
@@ -434,7 +439,18 @@ export class WebhookService {
       `📸 *English:* Once transfer is complete, please upload the transaction receipt PHOTO directly in this chat window:\n` +
       `📸 *မြန်မာ:* ငွေလွှဲပြီးပါက ငွေလွှဲပြေစာ \\(စခရင်ရှော့\\) ဓာတ်ပုံကို ဤချက်တွင် တိုက်ရိုက် ပေးပို့ပေးပါရန်:`;
 
-    await telegramClient.sendMessage(shop.botToken, chatId, instructionText);
+    const replyMarkup = {
+      inline_keyboard: [
+        [
+          {
+            text: "🛍️ Main Menu (Cancel) / ပင်မမီနူးသို့",
+            callback_data: "back_categories",
+          },
+        ],
+      ],
+    };
+
+    await telegramClient.sendMessage(shop.botToken, chatId, instructionText, replyMarkup);
   }
 
   private async handleReceiptUpload(shop: any, customer: any, message: any): Promise<void> {
