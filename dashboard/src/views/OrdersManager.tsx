@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
-import { Search, Eye, X } from "lucide-react";
+import { Search, Eye, X, Download } from "lucide-react";
 
 export function OrdersManager() {
   const { selectedShopId } = useOutletContext<{ selectedShopId: string }>();
@@ -9,6 +9,8 @@ export function OrdersManager() {
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:10000";
   const token = localStorage.getItem("token");
@@ -72,15 +74,54 @@ export function OrdersManager() {
     }
   };
 
-  // Filter orders list by query
+  // Filter orders list by query and date range
   const filteredOrders = orders.filter((o) => {
     const term = search.toLowerCase();
     const customerName = `${o.customer?.firstName || ""} ${o.customer?.lastName || ""}`.toLowerCase();
     const phone = (o.deliveryPhone || "").toLowerCase();
     const address = (o.deliveryAddress || "").toLowerCase();
     const id = o.id.toLowerCase();
-    return customerName.includes(term) || phone.includes(term) || address.includes(term) || id.includes(term);
+    const matchesSearch = customerName.includes(term) || phone.includes(term) || address.includes(term) || id.includes(term);
+    if (!matchesSearch) return false;
+
+    const orderDate = new Date(o.createdAt);
+    if (startDate && orderDate < new Date(startDate + "T00:00:00")) {
+      return false;
+    }
+    if (endDate && orderDate > new Date(endDate + "T23:59:59")) {
+      return false;
+    }
+
+    return true;
   });
+
+  const handleExportCSV = () => {
+    if (filteredOrders.length === 0) {
+      alert("No orders to export matching the current filters.");
+      return;
+    }
+
+    const headers = ["Order ID", "Customer Name", "Customer Phone", "Order Date", "Amount ($)", "Status", "Delivery Address"];
+    const rows = filteredOrders.map((o) => [
+      o.id,
+      o.customer ? `${o.customer.firstName} ${o.customer.lastName || ""}`.trim() : "Unknown",
+      o.deliveryPhone || "",
+      new Date(o.createdAt).toLocaleString(),
+      Number(o.totalAmount).toFixed(2),
+      o.status,
+      `"${(o.deliveryAddress || "").replace(/"/g, '""')}"`
+    ]);
+
+    const csvString = [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `orders_export_${startDate || "all"}_to_${endDate || "all"}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
@@ -113,7 +154,7 @@ export function OrdersManager() {
       </div>
 
       {/* Filter and Search Section */}
-      <div className="glass-card flex-row-between" style={{ padding: "16px 24px" }}>
+      <div className="glass-card flex-row-between" style={{ padding: "16px 24px", flexWrap: "wrap", gap: "16px" }}>
         <div style={{ position: "relative", width: "350px", display: "flex", alignItems: "center" }}>
           <Search size={16} style={{ position: "absolute", left: "14px", color: "var(--text-muted)" }} />
           <input
@@ -124,6 +165,50 @@ export function OrdersManager() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+        </div>
+
+        {/* Date Filter & Export Option */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <label className="form-label" style={{ margin: 0, fontSize: "12px", color: "var(--text-secondary)" }}>From:</label>
+            <input
+              type="date"
+              className="form-input"
+              style={{ padding: "6px 12px", fontSize: "13px" }}
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <label className="form-label" style={{ margin: 0, fontSize: "12px", color: "var(--text-secondary)" }}>To:</label>
+            <input
+              type="date"
+              className="form-input"
+              style={{ padding: "6px 12px", fontSize: "13px" }}
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
+          {(startDate || endDate) && (
+            <button
+              onClick={() => {
+                setStartDate("");
+                setEndDate("");
+              }}
+              className="btn btn-secondary"
+              style={{ padding: "8px 12px", fontSize: "12px", height: "38px" }}
+            >
+              Clear
+            </button>
+          )}
+          <button
+            onClick={handleExportCSV}
+            className="btn btn-primary"
+            style={{ padding: "8px 16px", fontSize: "13px", height: "38px", display: "flex", alignItems: "center", gap: "8px" }}
+          >
+            <Download size={15} />
+            <span>Export CSV</span>
+          </button>
         </div>
       </div>
 

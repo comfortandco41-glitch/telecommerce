@@ -13,6 +13,7 @@ import { handleUpload } from "./controllers/uploadController";
 import { authMiddleware } from "./middlewares/authMiddleware";
 import { shopAccessMiddleware } from "./middlewares/shopAccessMiddleware";
 import { errorMiddleware } from "./middlewares/errorMiddleware";
+import { authRateLimiter, webhookRateLimiter } from "./middlewares/rateLimitMiddleware";
 
 // Global BigInt JSON serialization patch
 if (typeof (BigInt.prototype as any).toJSON !== "function") {
@@ -36,11 +37,11 @@ const categoryController = new CategoryController();
 const productController = new ProductController();
 
 // Public Webhook Route (Webhook secret header validation is handled in the controller)
-app.post("/api/v1/webhook/:shopId", webhookController.handleWebhook);
+app.post("/api/v1/webhook/:shopId", webhookRateLimiter, webhookController.handleWebhook);
 
 // Auth Routes
-app.post("/api/v1/auth/register", handleRegister);
-app.post("/api/v1/auth/login", handleLogin);
+app.post("/api/v1/auth/register", authRateLimiter, handleRegister);
+app.post("/api/v1/auth/login", authRateLimiter, handleLogin);
 app.get("/api/v1/auth/me", authMiddleware, handleMe);
 app.get("/api/v1/shops", authMiddleware, handleGetShops);
 app.post("/api/v1/shops", authMiddleware, handleCreateShop);

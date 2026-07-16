@@ -24,14 +24,37 @@ export async function handleGetChatHistory(
       return next(new AppError("Shop not found or access denied", 404, "NOT_FOUND"));
     }
 
-    const messages = await prisma.supportMessage.findMany({
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined;
+    const offset = req.query.offset ? parseInt(req.query.offset as string) : undefined;
+
+    const totalCount = await prisma.supportMessage.count({
       where: { shopId, customerId },
-      orderBy: { createdAt: "asc" },
     });
+
+    let messages;
+    if (limit !== undefined) {
+      const rawMessages = await prisma.supportMessage.findMany({
+        where: { shopId, customerId },
+        orderBy: { createdAt: "desc" },
+        take: limit,
+        skip: offset,
+      });
+      messages = rawMessages.reverse();
+    } else {
+      messages = await prisma.supportMessage.findMany({
+        where: { shopId, customerId },
+        orderBy: { createdAt: "asc" },
+      });
+    }
 
     res.status(200).json({
       success: true,
       data: messages,
+      pagination: {
+        total: totalCount,
+        limit: limit ?? totalCount,
+        offset: offset ?? 0,
+      },
     });
   } catch (err) {
     next(err);

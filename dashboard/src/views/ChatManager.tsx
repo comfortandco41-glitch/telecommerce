@@ -14,7 +14,11 @@ export function ChatManager() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
 
+  const [limit, setLimit] = useState(5);
+  const [totalMessages, setTotalMessages] = useState(0);
+
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const shouldScrollToBottomRef = useRef(true);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:10000";
   const token = localStorage.getItem("token");
@@ -25,7 +29,9 @@ export function ChatManager() {
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (shouldScrollToBottomRef.current) {
+      scrollToBottom();
+    }
   }, [messages]);
 
   const fetchCustomers = async () => {
@@ -49,17 +55,21 @@ export function ChatManager() {
     }
   };
 
-  const fetchChatHistory = async () => {
+  const fetchChatHistory = async (customLimit?: number) => {
     if (!selectedShopId || !selectedCustomerId) return;
     setLoadingMessages(true);
     try {
+      const currentLimit = customLimit ?? limit;
       const res = await fetch(
-        `${API_URL}/api/v1/shops/${selectedShopId}/customers/${selectedCustomerId}/messages`,
+        `${API_URL}/api/v1/shops/${selectedShopId}/customers/${selectedCustomerId}/messages?limit=${currentLimit}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const json = await res.json();
       if (res.ok && json.success) {
         setMessages(json.data);
+        if (json.pagination) {
+          setTotalMessages(json.pagination.total);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch chat history log", err);
@@ -73,6 +83,7 @@ export function ChatManager() {
     fetchCustomers();
     setSelectedCustomerId("");
     setMessages([]);
+    setLimit(5);
 
     window.addEventListener("shopChanged", fetchCustomers);
     return () => {
@@ -81,19 +92,23 @@ export function ChatManager() {
   }, [selectedShopId]);
 
   useEffect(() => {
-    fetchChatHistory();
+    shouldScrollToBottomRef.current = true;
+    fetchChatHistory(limit);
 
     const interval = setInterval(() => {
       if (selectedShopId && selectedCustomerId) {
         // Soft refresh without loading spinner
         fetch(
-          `${API_URL}/api/v1/shops/${selectedShopId}/customers/${selectedCustomerId}/messages`,
+          `${API_URL}/api/v1/shops/${selectedShopId}/customers/${selectedCustomerId}/messages?limit=${limit}`,
           { headers: { Authorization: `Bearer ${token}` } }
         )
           .then((res) => res.json())
           .then((json) => {
             if (json.success) {
               setMessages(json.data);
+              if (json.pagination) {
+                setTotalMessages(json.pagination.total);
+              }
             }
           })
           .catch((err) => console.error("Poll chat error:", err));
@@ -101,7 +116,7 @@ export function ChatManager() {
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [selectedCustomerId]);
+  }, [selectedCustomerId, limit]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,13 +143,20 @@ export function ChatManager() {
         throw new Error(json.message || "Failed to dispatch support message");
       }
 
+      shouldScrollToBottomRef.current = true;
       setMessages((prev) => [...prev, json.data]);
+      setTotalMessages((prev) => prev + 1);
     } catch (err: any) {
       alert(err.message || "Error sending message");
       setText(msgText); // Restore input on fail
     } finally {
       setSending(false);
     }
+  };
+
+  const handleLoadMore = () => {
+    shouldScrollToBottomRef.current = false;
+    setLimit((prev) => prev + 5);
   };
 
   const getSelectedCustomer = () => {
@@ -166,7 +188,10 @@ export function ChatManager() {
               customers.map((c) => (
                 <div
                   key={c.id}
-                  onClick={() => setSelectedCustomerId(c.id)}
+                  onClick={() => {
+                    setLimit(5);
+                    setSelectedCustomerId(c.id);
+                  }}
                   className={`chat-customer-item ${selectedCustomerId === c.id ? "active" : ""}`}
                 >
                   <div className="chat-customer-avatar">
@@ -216,44 +241,75 @@ export function ChatManager() {
                 {loadingMessages && messages.length === 0 ? (
                   <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>Loading chat logs...</p>
                 ) : messages.length > 0 ? (
-                  messages.map((m) => (
-                    <div
-                      key={m.id}
-                      style={{
-                        alignSelf: m.sender === "ADMIN" ? "flex-end" : "flex-start",
-                        maxWidth: "60%",
-                      }}
-                    >
+                  <>
+                    {messages.length < totalMessages && (
+                      <button
+                        type="button"
+                        onClick={handleLoadMore}
+                        className="btn"
+                        style={{
+                          alignSelf: "center",
+                          fontSize: "12px",
+                          padding: "6px 12px",
+                          background: "rgba(255, 255, 255, 0.05)",
+                          border: "1px solid var(--border-color)",
+                          color: "var(--text-secondary)",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                          marginBottom: "8px",
+                          transition: "all 0.2s"
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.background = "rgba(255, 255, 255, 0.1)";
+                          e.currentTarget.style.color = "var(--text-primary)";
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)";
+                          e.currentTarget.style.color = "var(--text-secondary)";
+                        }}
+                      >
+                        Load More History ({totalMessages - messages.length} remaining)
+                      </button>
+                    )}
+                    {messages.map((m) => (
                       <div
+                        key={m.id}
                         style={{
-                          background: m.sender === "ADMIN" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.05)",
-                          border: m.sender === "ADMIN" ? "none" : "1px solid var(--border-color)",
-                          color: "var(--text-primary)",
-                          padding: "10px 16px",
-                          borderRadius: "14px",
-                          borderBottomRightRadius: m.sender === "ADMIN" ? "2px" : "14px",
-                          borderBottomLeftRadius: m.sender === "ADMIN" ? "14px" : "2px",
-                          fontSize: "13.5px",
-                          lineHeight: "1.5",
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-word",
+                          alignSelf: m.sender === "ADMIN" ? "flex-end" : "flex-start",
+                          maxWidth: "60%",
                         }}
                       >
-                        {m.text}
+                        <div
+                          style={{
+                            background: m.sender === "ADMIN" ? "var(--accent-color)" : "rgba(255, 255, 255, 0.05)",
+                            border: m.sender === "ADMIN" ? "none" : "1px solid var(--border-color)",
+                            color: "var(--text-primary)",
+                            padding: "10px 16px",
+                            borderRadius: "14px",
+                            borderBottomRightRadius: m.sender === "ADMIN" ? "2px" : "14px",
+                            borderBottomLeftRadius: m.sender === "ADMIN" ? "14px" : "2px",
+                            fontSize: "13.5px",
+                            lineHeight: "1.5",
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          {m.text}
+                        </div>
+                        <span
+                          style={{
+                            display: "block",
+                            fontSize: "10px",
+                            color: "var(--text-muted)",
+                            marginTop: "4px",
+                            textAlign: m.sender === "ADMIN" ? "right" : "left",
+                          }}
+                        >
+                          {new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </span>
                       </div>
-                      <span
-                        style={{
-                          display: "block",
-                          fontSize: "10px",
-                          color: "var(--text-muted)",
-                          marginTop: "4px",
-                          textAlign: m.sender === "ADMIN" ? "right" : "left",
-                        }}
-                      >
-                        {new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </span>
-                    </div>
-                  ))
+                    ))}
+                  </>
                 ) : (
                   <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}>
                     <MessageCircle size={32} style={{ marginBottom: "8px" }} />
