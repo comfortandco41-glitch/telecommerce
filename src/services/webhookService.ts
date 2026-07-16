@@ -9,6 +9,7 @@ import { escapeMarkdownV2 } from "../utils/markdown";
 import { supabase } from "../db/supabaseClient";
 import { workflowService } from "./workflowService";
 import { prisma } from "../db/client";
+import { compressReceiptImage } from "../utils/imageCompressor";
 
 export class WebhookService {
   private webhookRepo = new WebhookRepository();
@@ -448,12 +449,15 @@ export class WebhookService {
       }
 
       // 2. Download raw buffer
-      const buffer = await telegramClient.downloadFile(shop.botToken, fileInfo.file_path);
+      const rawBuffer = await telegramClient.downloadFile(shop.botToken, fileInfo.file_path);
+
+      // Compress and resize receipt image
+      const { data: compressedBuffer, mimeType } = await compressReceiptImage(rawBuffer);
 
       // 3. Upload to Supabase Storage receipts bucket
       const storagePath = `${shop.id}/receipts/${customer.id}-${Date.now()}.jpg`;
-      const { error } = await supabase.storage.from("receipts").upload(storagePath, buffer, {
-        contentType: "image/jpeg",
+      const { error } = await supabase.storage.from("receipts").upload(storagePath, compressedBuffer, {
+        contentType: mimeType,
       });
 
       if (error) {

@@ -23,6 +23,7 @@
     "handlebars": "^4.7.9",
     "jsonwebtoken": "^9.0.3",
     "puppeteer": "^25.3.0",
+    "sharp": "^0.35.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {
