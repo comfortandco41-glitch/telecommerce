@@ -9,9 +9,11 @@ import crypto from "crypto";
 
 const shopRepo = new ShopRepository();
 
-async function registerTelegramWebhook(botToken: string, shopId: string, host: string): Promise<void> {
+async function registerTelegramWebhook(botToken: string, shopId: string, hostHeader: string): Promise<void> {
   const secretToken = crypto.createHash("sha256").update(botToken).digest("hex");
-  const webhookUrl = `${host}/api/v1/webhook/${shopId}`;
+  const isLocal = hostHeader.includes("localhost") || hostHeader.includes("127.0.0.1");
+  const protocol = isLocal ? "http" : "https";
+  const webhookUrl = `${protocol}://${hostHeader}/api/v1/webhook/${shopId}`;
   
   const telegramUrl = `https://api.telegram.org/bot${botToken}/setWebhook?url=${encodeURIComponent(webhookUrl)}&secret_token=${secretToken}&allowed_updates=${JSON.stringify(["message", "callback_query"])}`;
   
@@ -74,7 +76,7 @@ export async function handleCreateShop(
     });
 
     // Automatically register Telegram webhook
-    const host = req.protocol + "://" + req.get("host");
+    const host = req.get("host") || "localhost:10000";
     try {
       await registerTelegramWebhook(botToken, shop.id, host);
     } catch (err: any) {
@@ -142,7 +144,7 @@ export async function handleUpdateShop(
 
     // If botToken was updated, re-register the webhook
     if (parse.data.botToken) {
-      const host = req.protocol + "://" + req.get("host");
+      const host = req.get("host") || "localhost:10000";
       try {
         await registerTelegramWebhook(parse.data.botToken, updated.id, host);
       } catch (err: any) {
