@@ -27,9 +27,25 @@ export class BroadcastService {
       await broadcastRepo.update(broadcastId, { status: BroadcastStatus.SENDING });
 
       // 2. Fetch target audience subscribers
-      const customers = await prisma.customer.findMany({
-        where: { shopId },
-      });
+      let customers;
+      if (broadcast.targetAudience === "BUYERS") {
+        customers = await prisma.customer.findMany({
+          where: {
+            shopId,
+            orders: {
+              some: {
+                status: {
+                  not: "CANCELLED",
+                },
+              },
+            },
+          },
+        });
+      } else {
+        customers = await prisma.customer.findMany({
+          where: { shopId },
+        });
+      }
 
       console.log(`Campaign ${broadcastId} has ${customers.length} target customers`);
 

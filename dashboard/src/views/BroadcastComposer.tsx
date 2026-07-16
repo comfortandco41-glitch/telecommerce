@@ -6,16 +6,20 @@ export function BroadcastComposer() {
   const { selectedShopId } = useOutletContext<{ selectedShopId: string }>();
 
   const [broadcasts, setBroadcasts] = useState<any[]>([]);
-  const [subscribersCount, setSubscribersCount] = useState(0);
+  const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Form states
   const [messageText, setMessageText] = useState("");
   const [mediaUrl, setMediaUrl] = useState("");
+  const [targetAudience, setTargetAudience] = useState<"ALL" | "BUYERS">("ALL");
   const [scheduledAt, setScheduledAt] = useState("");
   const [sendLoading, setSendLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const buyersCount = customers.filter(c => c.orders && c.orders.some((o: any) => o.status !== "CANCELLED")).length;
+  const activeAudienceCount = targetAudience === "BUYERS" ? buyersCount : customers.length;
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:10000";
   const token = localStorage.getItem("token");
@@ -33,12 +37,12 @@ export function BroadcastComposer() {
       const listJson = await listRes.json();
       setBroadcasts(listJson.success ? listJson.data : []);
 
-      // 2. Fetch audience customer segment count
+      // 2. Fetch audience customer list
       const custRes = await fetch(`${API_URL}/api/v1/shops/${selectedShopId}/customers`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const custJson = await custRes.json();
-      setSubscribersCount(custJson.success ? custJson.data.length : 0);
+      setCustomers(custJson.success ? custJson.data : []);
     } catch (err) {
       console.error("Failed to load broadcast views details", err);
     } finally {
@@ -77,6 +81,7 @@ export function BroadcastComposer() {
         body: JSON.stringify({
           messageText,
           mediaUrl: mediaUrl.trim() || undefined,
+          targetAudience,
           scheduledAt: scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
         }),
       });
@@ -93,6 +98,7 @@ export function BroadcastComposer() {
       );
       setMessageText("");
       setMediaUrl("");
+      setTargetAudience("ALL");
       setScheduledAt("");
 
       // Refresh list
@@ -194,7 +200,7 @@ export function BroadcastComposer() {
             <Users size={18} style={{ color: "#A5B4FC" }} />
           </div>
           <h3 className="metric-value" style={{ margin: "8px 0 4px", fontSize: "28px" }}>
-            {subscribersCount} subscribers
+            {activeAudienceCount} subscribers
           </h3>
           <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>
             Messages will deliver to these customers.
@@ -215,6 +221,19 @@ export function BroadcastComposer() {
           )}
 
           <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label className="form-label">Target Audience Segment</label>
+              <select
+                className="form-input"
+                value={targetAudience}
+                onChange={(e: any) => setTargetAudience(e.target.value)}
+                style={{ cursor: "pointer" }}
+              >
+                <option value="ALL">All Bot Subscribers ({customers.length})</option>
+                <option value="BUYERS">Previous Buyers Only ({buyersCount})</option>
+              </select>
+            </div>
+
             <div className="form-group">
               <label className="form-label">Message Content</label>
               <textarea

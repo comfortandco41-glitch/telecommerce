@@ -63,9 +63,17 @@ export class CustomerRepository {
     });
   }
 
-  async listByShopId(shopId: string): Promise<Customer[]> {
+  async listByShopId(shopId: string): Promise<any[]> {
     return prisma.customer.findMany({
       where: { shopId },
+      include: {
+        orders: {
+          select: {
+            id: true,
+            status: true,
+          },
+        },
+      },
       orderBy: { createdAt: "desc" },
     });
   }

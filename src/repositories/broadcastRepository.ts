@@ -7,6 +7,7 @@ export class BroadcastRepository {
     data: {
       messageText: string;
       mediaUrl?: string | null;
+      targetAudience?: string;
       scheduledAt?: Date | null;
     }
   ): Promise<Broadcast> {
@@ -15,6 +16,7 @@ export class BroadcastRepository {
         shopId,
         messageText: data.messageText,
         mediaUrl: data.mediaUrl || null,
+        targetAudience: data.targetAudience || "ALL",
         scheduledAt: data.scheduledAt || null,
         status: BroadcastStatus.PENDING,
       },

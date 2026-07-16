@@ -144,17 +144,18 @@ model OrderItem {
 }
 
 model Broadcast {
-  id          String          @id @default(uuid())
-  shopId      String
-  shop        Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
-  messageText String          @db.Text
-  mediaUrl    String?
-  status      BroadcastStatus @default(PENDING)
-  sentCount   Int             @default(0)
-  failedCount Int             @default(0)
-  scheduledAt DateTime?
-  sentAt      DateTime?
-  createdAt   DateTime        @default(now())
+  id             String          @id @default(uuid())
+  shopId         String
+  shop           Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  messageText    String          @db.Text
+  mediaUrl       String?
+  targetAudience String          @default("ALL") // "ALL" or "BUYERS"
+  status         BroadcastStatus @default(PENDING)
+  sentCount      Int             @default(0)
+  failedCount    Int             @default(0)
+  scheduledAt    DateTime?
+  sentAt         DateTime?
+  createdAt      DateTime        @default(now())
 
   @@index([shopId, status])
 }

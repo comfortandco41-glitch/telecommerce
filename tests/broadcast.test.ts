@@ -120,4 +120,41 @@ describe("Phase 6 - CRM Campaigns & Throttled Broadcasts Pipeline", () => {
       })
     );
   });
+
+  it("should filter only previous buyers when targetAudience is BUYERS", async () => {
+    const broadcastId = "bc-buyers";
+    const mockBroadcast = {
+      id: broadcastId,
+      shopId,
+      messageText: "Exclusive buyers promotion",
+      mediaUrl: null,
+      targetAudience: "BUYERS",
+      status: BroadcastStatus.PENDING,
+    };
+
+    prismaMock.broadcast.findUnique.mockResolvedValue(mockBroadcast);
+    prismaMock.shop.findUnique.mockResolvedValue({ id: shopId, botToken });
+
+    prismaMock.customer.findMany.mockResolvedValue([
+      { id: "cust-buyer-1", telegramId: BigInt(5555) },
+    ]);
+
+    const broadcastService = new BroadcastService();
+    await broadcastService.runBroadcast(shopId, broadcastId);
+
+    expect(prismaMock.customer.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          shopId,
+          orders: expect.objectContaining({
+            some: expect.objectContaining({
+              status: expect.objectContaining({
+                not: "CANCELLED",
+              }),
+            }),
+          }),
+        }),
+      })
+    );
+  });
 });

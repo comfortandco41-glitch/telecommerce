@@ -11,6 +11,7 @@ const broadcastService = new BroadcastService();
 const createBroadcastSchema = z.object({
   messageText: z.string().min(5),
   mediaUrl: z.string().url().optional().nullable().or(z.literal("")),
+  targetAudience: z.enum(["ALL", "BUYERS"]).optional().default("ALL"),
   scheduledAt: z.string().datetime().optional().nullable().or(z.literal("")),
 });
 
@@ -43,12 +44,13 @@ export async function handleCreateBroadcast(
       return next(new AppError("Invalid input fields", 400, "BAD_REQUEST", parse.error.format()));
     }
 
-    const { messageText, mediaUrl, scheduledAt } = parse.data;
+    const { messageText, mediaUrl, targetAudience, scheduledAt } = parse.data;
     const parsedScheduledAt = scheduledAt ? new Date(scheduledAt) : null;
 
     const broadcast = await broadcastRepo.create(shopId, {
       messageText,
       mediaUrl: mediaUrl || null,
+      targetAudience,
       scheduledAt: parsedScheduledAt,
     });
 
