@@ -29,7 +29,13 @@ export class ProductService {
       throw new NotFoundError(`Category with ID ${data.categoryId} not found in this shop`);
     }
 
-    // 2. Validate parameters
+    // 2. Validate product limit (maximum 100 products per shop)
+    const productCount = await this.productRepo.countByShopId(this.shopId);
+    if (productCount >= 100) {
+      throw new ValidationError("Product limit reached. Each shop can have a maximum of 100 products.");
+    }
+
+    // 3. Validate parameters
     if (!data.name || data.name.trim() === "") {
       throw new ValidationError("Product name is required");
     }

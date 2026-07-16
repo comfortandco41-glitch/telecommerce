@@ -34,6 +34,12 @@ export class ProductRepository {
     });
   }
 
+  async countByShopId(shopId: string): Promise<number> {
+    return prisma.product.count({
+      where: { shopId },
+    });
+  }
+
   async listActiveByShopId(shopId: string): Promise<Product[]> {
     return prisma.product.findMany({
       where: { shopId, isActive: true },
