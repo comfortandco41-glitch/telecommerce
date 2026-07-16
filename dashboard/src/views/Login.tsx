@@ -30,7 +30,7 @@ export function Login() {
 
         const json = await res.json();
         if (!res.ok || !json.success) {
-          throw new Error(json.message || "Failed to register account");
+          throw new Error(json.error?.message || json.message || "Failed to register account");
         }
 
         // Save credentials in storage and redirect immediately
@@ -54,7 +54,7 @@ export function Login() {
 
         const json = await res.json();
         if (!res.ok || !json.success) {
-          throw new Error(json.message || "Authentication failed");
+          throw new Error(json.error?.message || json.message || "Authentication failed");
         }
 
         localStorage.setItem("token", json.data.token);
