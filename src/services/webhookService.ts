@@ -430,9 +430,9 @@ export class WebhookService {
       `💸 *Order Total:* / *စုစုပေါင်းကျသင့်ငွေ:* *${escapeMarkdownV2(shop.currency)} ${escapeMarkdownV2(total.toString())}*\n\n` +
       `🇬🇧 Please make bank transfer using the instructions below:\n` +
       `🇲🇲 ကျေးဇူးပြု၍ အောက်ပါအချက်အလက်များအတိုင်း ငွေလွှဲပေးပါရန်:\n` +
-      `\`\`\`\n${shop.paymentInstructions}\n\`\`\`\n\n` +
+      `\`\`\`\n${escapeMarkdownV2(shop.paymentInstructions)}\n\`\`\`\n\n` +
       `📸 *English:* Once transfer is complete, please upload the transaction receipt PHOTO directly in this chat window:\n` +
-      `📸 *မြန်မာ:* ငွေလွှဲပြီးပါက ငွေလွှဲပြေစာ (စခရင်ရှော့) ဓာတ်ပုံကို ဤချက်တွင် တိုက်ရိုက် ပေးပို့ပေးပါရန်:`;
+      `📸 *မြန်မာ:* ငွေလွှဲပြီးပါက ငွေလွှဲပြေစာ \\(စခရင်ရှော့\\) ဓာတ်ပုံကို ဤချက်တွင် တိုက်ရိုက် ပေးပို့ပေးပါရန်:`;
 
     await telegramClient.sendMessage(shop.botToken, chatId, instructionText);
   }
