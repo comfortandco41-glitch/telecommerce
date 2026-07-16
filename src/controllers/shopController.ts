@@ -5,8 +5,26 @@ import { AppError } from "../errors/appError";
 
 import { prisma } from "../db/client";
 import { z } from "zod";
+import crypto from "crypto";
 
 const shopRepo = new ShopRepository();
+
+async function registerTelegramWebhook(botToken: string, shopId: string, host: string): Promise<void> {
+  const secretToken = crypto.createHash("sha256").update(botToken).digest("hex");
+  const webhookUrl = `${host}/api/v1/webhook/${shopId}`;
+  
+  const telegramUrl = `https://api.telegram.org/bot${botToken}/setWebhook?url=${encodeURIComponent(webhookUrl)}&secret_token=${secretToken}&allowed_updates=${JSON.stringify(["message", "callback_query"])}`;
+  
+  try {
+    const res = await fetch(telegramUrl);
+    const json: any = await res.json();
+    if (!res.ok || !json.ok) {
+      throw new Error(json.description || "Failed to set Telegram webhook");
+    }
+  } catch (err: any) {
+    throw new AppError(`Telegram webhook registration failed: ${err.message}`, 400, "BAD_REQUEST");
+  }
+}
 
 const shopSchema = z.object({
   botToken: z.string().min(5),
@@ -54,6 +72,16 @@ export async function handleCreateShop(
         welcomeMessage,
       },
     });
+
+    // Automatically register Telegram webhook
+    const host = req.protocol + "://" + req.get("host");
+    try {
+      await registerTelegramWebhook(botToken, shop.id, host);
+    } catch (err: any) {
+      // Rollback database record creation on webhook failure
+      await prisma.shop.delete({ where: { id: shop.id } });
+      return next(err);
+    }
 
     res.status(201).json({
       success: true,
@@ -111,6 +139,21 @@ export async function handleUpdateShop(
       where: { id: shopId },
       data: parse.data,
     });
+
+    // If botToken was updated, re-register the webhook
+    if (parse.data.botToken) {
+      const host = req.protocol + "://" + req.get("host");
+      try {
+        await registerTelegramWebhook(parse.data.botToken, updated.id, host);
+      } catch (err: any) {
+        // Rollback update on webhook registration failure
+        await prisma.shop.update({
+          where: { id: shopId },
+          data: { botToken: shop.botToken },
+        });
+        return next(err);
+      }
+    }
 
     res.status(200).json({
       success: true,
