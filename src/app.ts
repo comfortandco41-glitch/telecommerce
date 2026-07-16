@@ -24,8 +24,15 @@ if (typeof (BigInt.prototype as any).toJSON !== "function") {
 
 const app = express();
 
+const frontendUrlEnv = process.env.FRONTEND_URL || "";
+const configuredOrigins = frontendUrlEnv
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter((origin) => origin.length > 0);
+
 const corsOrigin = [
-  process.env.FRONTEND_URL || "https://dashboard.superbot.app",
+  ...configuredOrigins,
+  "https://dashboard.superbot.app",
   "http://localhost:5173",
 ];
 app.use(cors({ origin: corsOrigin, credentials: true }));
