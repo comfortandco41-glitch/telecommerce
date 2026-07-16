@@ -55,7 +55,7 @@ export async function handleRegister(
       return next(new AppError("Email is already registered", 400, "BAD_REQUEST"));
     }
 
-    // Sign up with Supabase Auth (automatically sends confirmation OTP to user email)
+    // Sign up with Supabase Auth (automatically sends confirmation template in the background)
     const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
@@ -69,12 +69,20 @@ export async function handleRegister(
     const passwordHash = await bcrypt.hash(password, 10);
     const merchant = await merchantRepo.create({ email, passwordHash, name });
 
+    const token = jwt.sign({ id: merchant.id, email: merchant.email }, JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
     res.status(201).json({
       success: true,
-      message: "Welcome verification code sent to your email.",
+      message: "Merchant account registered successfully.",
       data: {
-        email: merchant.email,
-        name: merchant.name,
+        token,
+        merchant: {
+          id: merchant.id,
+          email: merchant.email,
+          name: merchant.name,
+        },
       },
     });
   } catch (err) {

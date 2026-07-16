@@ -52,8 +52,8 @@ describe("Merchant Authentication API", () => {
 
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
-      expect(response.body.message).toContain("verification code");
-      expect(response.body.data.email).toBe(email);
+      expect(response.body.data.token).toBeDefined();
+      expect(response.body.data.merchant.email).toBe(email);
       expect(prismaMock.merchant.create).toHaveBeenCalledTimes(1);
     });
 

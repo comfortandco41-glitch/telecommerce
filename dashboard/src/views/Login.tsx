@@ -36,8 +36,12 @@ export function Login() {
           throw new Error(json.message || "Failed to initiate registration");
         }
 
-        setStep("VERIFY_OTP");
-        setError("");
+        // Save credentials in storage and redirect immediately
+        localStorage.setItem("token", json.data.token);
+        localStorage.setItem("merchantName", json.data.merchant.name);
+        localStorage.setItem("merchantEmail", json.data.merchant.email);
+
+        navigate("/overview");
       } catch (err: any) {
         setError(err.message || "Failed to connect to server");
       } finally {
