@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Search, Eye, X, Download } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 export function OrdersManager() {
   const { selectedShopId } = useOutletContext<{ selectedShopId: string }>();
+  const { language, t } = useLanguage();
   const [orders, setOrders] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
@@ -141,6 +143,22 @@ export function OrdersManager() {
   };
 
   const getStatusLabel = (status: string) => {
+    if (language === "my") {
+      switch (status) {
+        case "PENDING":
+          return "မပြည့်စုံသေးသော";
+        case "PENDING_VERIFICATION":
+          return "စစ်ဆေးဆဲ";
+        case "PAID":
+          return "ငွေချေပြီး";
+        case "SHIPPED":
+          return "ပို့ဆောင်ပြီး";
+        case "CANCELLED":
+          return "ပယ်ဖျက်ပြီး";
+        default:
+          return status;
+      }
+    }
     return status.replace("_", " ");
   };
 
@@ -148,8 +166,8 @@ export function OrdersManager() {
     <div className="page-body">
       <div className="page-header">
         <div>
-          <h2 className="page-title">Orders Directory</h2>
-          <p className="page-subtitle">Inspect buyer receipts, approve payments, and track fulfillment</p>
+          <h2 className="page-title">{t("orders.title")}</h2>
+          <p className="page-subtitle">{t("orders.subtitle")}</p>
         </div>
       </div>
 
@@ -159,7 +177,7 @@ export function OrdersManager() {
           <Search size={16} style={{ position: "absolute", left: "14px", color: "var(--text-muted)" }} />
           <input
             type="text"
-            placeholder="Search by shopper name, phone, or ID..."
+            placeholder={language === "my" ? "ဝယ်ယူသူအမည်၊ ဖုန်းဖြင့်ရှာဖွေရန်..." : "Search by shopper name, phone, or ID..."}
             className="form-input"
             style={{ width: "100%", paddingLeft: "42px" }}
             value={search}
@@ -170,7 +188,7 @@ export function OrdersManager() {
         {/* Date Filter & Export Option */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <label className="form-label" style={{ margin: 0, fontSize: "12px", color: "var(--text-secondary)" }}>From:</label>
+            <label className="form-label" style={{ margin: 0, fontSize: "12px", color: "var(--text-secondary)" }}>{t("orders.dateFrom")}:</label>
             <input
               type="date"
               className="form-input"
@@ -180,7 +198,7 @@ export function OrdersManager() {
             />
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <label className="form-label" style={{ margin: 0, fontSize: "12px", color: "var(--text-secondary)" }}>To:</label>
+            <label className="form-label" style={{ margin: 0, fontSize: "12px", color: "var(--text-secondary)" }}>{t("orders.dateTo")}:</label>
             <input
               type="date"
               className="form-input"
@@ -198,7 +216,7 @@ export function OrdersManager() {
               className="btn btn-secondary"
               style={{ padding: "8px 12px", fontSize: "12px", height: "38px" }}
             >
-              Clear
+              {language === "my" ? "ရှင်းလင်းမည်" : "Clear"}
             </button>
           )}
           <button
@@ -207,7 +225,7 @@ export function OrdersManager() {
             style={{ padding: "8px 16px", fontSize: "13px", height: "38px", display: "flex", alignItems: "center", gap: "8px" }}
           >
             <Download size={15} />
-            <span>Export CSV</span>
+            <span>{t("orders.exportCsv")}</span>
           </button>
         </div>
       </div>
@@ -215,18 +233,20 @@ export function OrdersManager() {
       {/* Orders Table list */}
       <div className="glass-card" style={{ padding: "0" }}>
         {loading ? (
-          <p style={{ padding: "24px", color: "var(--text-secondary)" }}>Loading order database records...</p>
+          <p style={{ padding: "24px", color: "var(--text-secondary)" }}>
+            {language === "my" ? "အော်ဒါမှတ်တမ်းများ ယူနေသည်..." : "Loading order database records..."}
+          </p>
         ) : filteredOrders.length > 0 ? (
           <div className="data-table-container">
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Order ID</th>
-                  <th>Customer</th>
-                  <th>Order Date</th>
-                  <th>Amount</th>
-                  <th>Fulfillment</th>
-                  <th style={{ textAlign: "right" }}>Actions</th>
+                  <th>{t("overview.orderId")}</th>
+                  <th>{t("overview.customer")}</th>
+                  <th>{t("overview.date")}</th>
+                  <th>{t("overview.amount")}</th>
+                  <th>{t("overview.status")}</th>
+                  <th style={{ textAlign: "right" }}>{t("orders.actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -253,7 +273,7 @@ export function OrdersManager() {
                     <td style={{ textAlign: "right" }}>
                       <button onClick={() => setSelectedOrder(o)} className="btn btn-secondary btn-sm flex-gap-12" style={{ display: "inline-flex" }}>
                         <Eye size={12} />
-                        <span>Inspect</span>
+                        <span>{language === "my" ? "စစ်ဆေးရန်" : "Inspect"}</span>
                       </button>
                     </td>
                   </tr>
@@ -263,7 +283,7 @@ export function OrdersManager() {
           </div>
         ) : (
           <p style={{ padding: "32px", textAlign: "center", color: "var(--text-secondary)" }}>
-            No orders found matching the filter query.
+            {language === "my" ? "ရှာဖွေမှုနှင့် ကိုက်ညီသော အော်ဒါမရှိပါ။" : "No orders found matching the filter query."}
           </p>
         )}
       </div>
@@ -273,7 +293,7 @@ export function OrdersManager() {
         <div className="drawer-backdrop" onClick={() => setSelectedOrder(null)}>
           <div className="drawer" onClick={(e) => e.stopPropagation()}>
             <div className="drawer-header">
-              <h3 className="drawer-title">Order Details</h3>
+              <h3 className="drawer-title">{language === "my" ? "အော်ဒါ အသေးစိတ်" : "Order Details"}</h3>
               <button
                 onClick={() => setSelectedOrder(null)}
                 style={{ background: "transparent", border: "none", color: "var(--text-secondary)", cursor: "pointer" }}
@@ -284,14 +304,14 @@ export function OrdersManager() {
 
             <div className="drawer-body">
               <div className="drawer-section">
-                <span className="drawer-section-title">Order Reference ID</span>
+                <span className="drawer-section-title">{language === "my" ? "အော်ဒါ ID" : "Order Reference ID"}</span>
                 <span className="drawer-detail-value" style={{ fontFamily: "var(--mono)", fontSize: "13px", color: "var(--accent-color)" }}>
                   {selectedOrder.id}
                 </span>
               </div>
 
               <div className="drawer-section">
-                <span className="drawer-section-title">Fulfillment Status</span>
+                <span className="drawer-section-title">{t("overview.status")}</span>
                 <div>
                   <span className={getStatusBadgeClass(selectedOrder.status)}>
                     {getStatusLabel(selectedOrder.status)}
@@ -300,7 +320,7 @@ export function OrdersManager() {
               </div>
 
               <div className="drawer-section">
-                <span className="drawer-section-title">Buyer Profile</span>
+                <span className="drawer-section-title">{language === "my" ? "ဝယ်ယူသူ ကိုယ်ရေးအကျဉ်း" : "Buyer Profile"}</span>
                 <span className="drawer-detail-value">
                   {selectedOrder.customer ? `${selectedOrder.customer.firstName} ${selectedOrder.customer.lastName || ""}` : "Unknown"}
                   {selectedOrder.customer?.username && ` (@${selectedOrder.customer.username})`}
@@ -308,15 +328,15 @@ export function OrdersManager() {
               </div>
 
               <div className="drawer-section">
-                <span className="drawer-section-title">Delivery Contact Details</span>
+                <span className="drawer-section-title">{language === "my" ? "ပို့ဆောင်မည့် လိပ်စာနှင့် ဖုန်း" : "Delivery Contact Details"}</span>
                 <span className="drawer-detail-value">
-                  Phone: <strong>{selectedOrder.deliveryPhone}</strong><br />
-                  Address: <strong>{selectedOrder.deliveryAddress}</strong>
+                  {language === "my" ? "ဖုန်း-" : "Phone:"} <strong>{selectedOrder.deliveryPhone}</strong><br />
+                  {language === "my" ? "လိပ်စာ-" : "Address:"} <strong>{selectedOrder.deliveryAddress}</strong>
                 </span>
               </div>
 
               <div className="drawer-section">
-                <span className="drawer-section-title">Items Ordered</span>
+                <span className="drawer-section-title">{t("orders.items")}</span>
                 <div style={{ background: "rgba(255, 255, 255, 0.02)", border: "1px solid var(--border-color)", borderRadius: "8px", padding: "12px" }}>
                   {selectedOrder.items?.map((item: any) => (
                     <div key={item.id} className="flex-row-between" style={{ padding: "6px 0", fontSize: "13px", borderBottom: "1px solid rgba(255, 255, 255, 0.04)" }}>
@@ -329,7 +349,7 @@ export function OrdersManager() {
                     </div>
                   ))}
                   <div className="flex-row-between" style={{ paddingTop: "10px", fontWeight: "700", fontSize: "14px" }}>
-                    <span>Total Amount Paid</span>
+                    <span>{language === "my" ? "စုစုပေါင်းကျသင့်ငွေ" : "Total Amount Paid"}</span>
                     <span style={{ color: "var(--accent-color)" }}>
                       ${Number(selectedOrder.totalAmount).toFixed(2)}
                     </span>
@@ -338,7 +358,7 @@ export function OrdersManager() {
               </div>
 
               <div className="drawer-section">
-                <span className="drawer-section-title">Bank Transfer Screenshot</span>
+                <span className="drawer-section-title">{t("overview.paymentVerification")}</span>
                 {selectedOrder.bankScreenshotUrl ? (
                   <a href={selectedOrder.bankScreenshotUrl} target="_blank" rel="noreferrer">
                     <img
@@ -352,7 +372,7 @@ export function OrdersManager() {
                   </a>
                 ) : (
                   <span className="drawer-detail-value" style={{ color: "var(--text-muted)" }}>
-                    No receipt image was uploaded for this transaction.
+                    {language === "my" ? "ပြေစာပုံတင်ထားခြင်းမရှိပါ။" : "No receipt image was uploaded for this transaction."}
                   </span>
                 )}
               </div>
@@ -361,7 +381,7 @@ export function OrdersManager() {
             {/* Actions for updating order status */}
             <div className="drawer-actions" style={{ padding: "20px 24px", borderTop: "1px solid var(--border-color)", width: "100%" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "6px", width: "100%" }}>
-                <label className="form-label" style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>Update Order Status</label>
+                <label className="form-label" style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "4px" }}>{language === "my" ? "အော်ဒါအခြေအနေ ပြောင်းရန်" : "Update Order Status"}</label>
                 <select
                   className="form-input"
                   style={{ width: "100%" }}
@@ -371,7 +391,7 @@ export function OrdersManager() {
                 >
                   <option value="PENDING">PENDING</option>
                   <option value="PENDING_VERIFICATION">PENDING VERIFICATION</option>
-                  <option value="PAID">PAID (Approve Payment & Send Invoice)</option>
+                  <option value="PAID">{language === "my" ? "PAID (ငွေလွှဲအတည်ပြုပြီး အင်ဗွိုက်စ်ပို့ရန်)" : "PAID (Approve Payment & Send Invoice)"}</option>
                   <option value="SHIPPED">SHIPPED</option>
                   <option value="CANCELLED">CANCELLED</option>
                 </select>

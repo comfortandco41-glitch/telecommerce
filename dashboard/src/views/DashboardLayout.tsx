@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, ShoppingCart, Package, LogOut, Plus, Megaphone, MessageSquare, Settings2, CreditCard } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 export function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { language, setLanguage, t } = useLanguage();
   
   const [shops, setShops] = useState<any[]>([]);
   const [selectedShopId, setSelectedShopId] = useState<string>("");
@@ -116,7 +118,7 @@ export function DashboardLayout() {
   if (loading) {
     return (
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "var(--bg-main)", height: "100vh" }}>
-        <p style={{ color: "var(--text-secondary)", fontSize: "16px" }}>Loading Dashboard Workspace...</p>
+        <p style={{ color: "var(--text-secondary)", fontSize: "16px" }}>{language === "my" ? "ဒက်ရှ်ဘုတ်သို့ ဝင်ရောက်နေသည်..." : "Loading Dashboard Workspace..."}</p>
       </div>
     );
   }
@@ -135,56 +137,56 @@ export function DashboardLayout() {
             className={`sidebar-item ${location.pathname.startsWith("/overview") ? "active" : ""}`}
           >
             <LayoutDashboard size={18} />
-            <span>Overview</span>
+            <span>{t("sidebar.overview")}</span>
           </Link>
           <Link
             to="/orders"
             className={`sidebar-item ${location.pathname.startsWith("/orders") ? "active" : ""}`}
           >
             <ShoppingCart size={18} />
-            <span>Orders</span>
+            <span>{t("sidebar.orders")}</span>
           </Link>
           <Link
             to="/products"
             className={`sidebar-item ${location.pathname.startsWith("/products") ? "active" : ""}`}
           >
             <Package size={18} />
-            <span>Catalog</span>
+            <span>{t("sidebar.products")}</span>
           </Link>
           <Link
             to="/broadcasts"
             className={`sidebar-item ${location.pathname.startsWith("/broadcasts") ? "active" : ""}`}
           >
             <Megaphone size={18} />
-            <span>Broadcasts</span>
+            <span>{t("sidebar.broadcasts")}</span>
           </Link>
           <Link
             to="/chat"
             className={`sidebar-item ${location.pathname.startsWith("/chat") ? "active" : ""}`}
           >
             <MessageSquare size={18} />
-            <span>Support Chat</span>
+            <span>{t("sidebar.chat")}</span>
           </Link>
           <Link
             to="/settings"
             className={`sidebar-item ${location.pathname.startsWith("/settings") ? "active" : ""}`}
           >
             <Settings2 size={18} />
-            <span>Settings</span>
+            <span>{t("sidebar.settings")}</span>
           </Link>
           <Link
             to="/subscription"
             className={`sidebar-item ${location.pathname.startsWith("/subscription") ? "active" : ""}`}
           >
             <CreditCard size={18} />
-            <span>Subscription</span>
+            <span>{t("sidebar.subscription")}</span>
           </Link>
         </nav>
 
         <div className="sidebar-footer">
           <button onClick={handleLogout} className="sidebar-item" style={{ background: "transparent", border: "none", width: "100%", textAlign: "left" }}>
             <LogOut size={18} />
-            <span>Sign Out</span>
+            <span>{t("sidebar.logout")}</span>
           </button>
         </div>
       </aside>
@@ -206,7 +208,7 @@ export function DashboardLayout() {
                 ))}
               </select>
             ) : (
-              <span style={{ fontSize: "14px", color: "var(--text-secondary)" }}>No active shops</span>
+              <span style={{ fontSize: "14px", color: "var(--text-secondary)" }}>{t("onboarding.noActiveShops")}</span>
             )}
             {shops.length === 0 && (
               <button
@@ -214,15 +216,51 @@ export function DashboardLayout() {
                 className="btn btn-secondary btn-sm flex-gap-12"
               >
                 <Plus size={14} />
-                <span>New Shop</span>
+                <span>{t("onboarding.newShop")}</span>
               </button>
             )}
           </div>
 
           <div className="header-user-section">
+            {/* Language Switcher Toggle */}
+            <div style={{ display: "flex", gap: "6px", marginRight: "16px" }}>
+              <button
+                type="button"
+                onClick={() => setLanguage("en")}
+                style={{
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                  border: "1px solid var(--border-color)",
+                  backgroundColor: language === "en" ? "var(--accent-color)" : "transparent",
+                  color: language === "en" ? "#fff" : "var(--text-secondary)",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                }}
+              >
+                🇬🇧 EN
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage("my")}
+                style={{
+                  padding: "4px 8px",
+                  borderRadius: "4px",
+                  border: "1px solid var(--border-color)",
+                  backgroundColor: language === "my" ? "var(--accent-color)" : "transparent",
+                  color: language === "my" ? "#fff" : "var(--text-secondary)",
+                  cursor: "pointer",
+                  fontSize: "12px",
+                  fontWeight: "600",
+                }}
+              >
+                🇲🇲 မြန်မာ
+              </button>
+            </div>
+
             <div className="status-badge">
               <div className="status-dot"></div>
-              <span>Webhook Active</span>
+              <span>{t("onboarding.webhookActive")}</span>
             </div>
             <div className="user-profile">
               <div className="user-avatar">{initials}</div>
@@ -237,12 +275,12 @@ export function DashboardLayout() {
         ) : (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px", textAlign: "center" }}>
             <div className="glass-card" style={{ maxWidth: "450px" }}>
-              <h3 style={{ margin: "0 0 12px", fontSize: "20px", fontWeight: "700" }}>Welcome to Tele-Commerce!</h3>
+              <h3 style={{ margin: "0 0 12px", fontSize: "20px", fontWeight: "700" }}>{t("onboarding.welcome")}</h3>
               <p style={{ color: "var(--text-secondary)", fontSize: "14px", lineHeight: "1.6", marginBottom: "24px" }}>
-                You haven't initialized any shop bots yet. Create your first shop bot below to start selling products inside Telegram.
+                {t("onboarding.onboardInstructions")}
               </p>
               <button onClick={() => setShowCreateModal(true)} className="btn btn-primary">
-                Create First Shop Bot
+                {t("onboarding.createFirst")}
               </button>
             </div>
           </div>
@@ -253,7 +291,7 @@ export function DashboardLayout() {
       {showCreateModal && (
         <div className="drawer-backdrop" style={{ justifyContent: "center", alignItems: "center" }}>
           <div className="glass-card" style={{ width: "500px", padding: "32px", position: "relative" }}>
-            <h3 style={{ margin: "0 0 20px", fontSize: "18px", fontWeight: "700" }}>Configure Telegram Shop Bot</h3>
+            <h3 style={{ margin: "0 0 20px", fontSize: "18px", fontWeight: "700" }}>{t("onboarding.modalTitle")}</h3>
             
             {createError && (
               <div style={{ padding: "10px", color: "var(--danger-color)", background: "var(--danger-bg)", border: "1px solid var(--danger-border)", borderRadius: "8px", fontSize: "13px", marginBottom: "16px" }}>
@@ -263,7 +301,7 @@ export function DashboardLayout() {
 
             <form onSubmit={handleCreateShopSubmit}>
               <div className="form-group">
-                <label className="form-label">Shop Display Name</label>
+                <label className="form-label">{t("settings.shopName")}</label>
                 <input
                   type="text"
                   className="form-input"
@@ -275,7 +313,7 @@ export function DashboardLayout() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Telegram Bot Api Token</label>
+                <label className="form-label">{t("settings.botToken")}</label>
                 <input
                   type="text"
                   className="form-input"
@@ -287,7 +325,7 @@ export function DashboardLayout() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Currency Symbol</label>
+                <label className="form-label">{t("settings.currency")}</label>
                 <input
                   type="text"
                   className="form-input"
@@ -299,7 +337,7 @@ export function DashboardLayout() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Bank Transfer Payment Instructions</label>
+                <label className="form-label">{t("settings.paymentInstructions")}</label>
                 <textarea
                   className="form-input"
                   style={{ minHeight: "80px", fontFamily: "inherit" }}
@@ -311,7 +349,7 @@ export function DashboardLayout() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Welcome Message Text</label>
+                <label className="form-label">{t("settings.welcomeMsg")}</label>
                 <textarea
                   className="form-input"
                   style={{ minHeight: "80px", fontFamily: "inherit" }}
@@ -329,14 +367,14 @@ export function DashboardLayout() {
                   className="btn btn-secondary"
                   disabled={createLoading}
                 >
-                  Cancel
+                  {t("products.cancel")}
                 </button>
                 <button
                   type="submit"
                   className="btn btn-primary"
                   disabled={createLoading}
                 >
-                  {createLoading ? "Creating..." : "Create Shop"}
+                  {createLoading ? t("onboarding.creating") : t("onboarding.createFirst")}
                 </button>
               </div>
             </form>

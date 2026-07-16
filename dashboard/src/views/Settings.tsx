@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Save, Settings2, ShieldCheck, AlertCircle } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 export function Settings() {
   const { selectedShopId } = useOutletContext<{ selectedShopId: string }>();
+  const { language, t } = useLanguage();
   
   const [name, setName] = useState("");
   const [botToken, setBotToken] = useState("");
@@ -102,7 +104,12 @@ export function Settings() {
         throw new Error(json.message || "Failed to update settings");
       }
 
-      setMessage({ type: "success", text: "Settings saved successfully! Bot welcome messages and payment templates are now live." });
+      setMessage({
+        type: "success",
+        text: language === "my"
+          ? "ဆိုင်ဆက်တင်များကို အောင်မြင်စွာ သိမ်းဆည်းပြီးပါပြီ။"
+          : "Settings saved successfully! Bot welcome messages and payment templates are now live."
+      });
       
       // Update sidebar shop title list
       window.dispatchEvent(new Event("shopChanged"));
@@ -116,7 +123,9 @@ export function Settings() {
   if (loading) {
     return (
       <div className="page-body">
-        <p style={{ color: "var(--text-secondary)" }}>Loading shop settings configuration...</p>
+        <p style={{ color: "var(--text-secondary)" }}>
+          {language === "my" ? "ဆိုင်အချက်အလက်များ ယူနေသည်..." : "Loading shop settings configuration..."}
+        </p>
       </div>
     );
   }
@@ -127,9 +136,9 @@ export function Settings() {
         <div>
           <h2 className="page-title flex-gap-12" style={{ display: "flex", alignItems: "center" }}>
             <Settings2 size={24} style={{ color: "var(--accent-color)" }} />
-            <span>Shop Configuration</span>
+            <span>{t("settings.title")}</span>
           </h2>
-          <p className="page-subtitle">Customize shop branding, payment guidelines, currency preferences, and bot credentials</p>
+          <p className="page-subtitle">{t("settings.subtitle")}</p>
         </div>
       </div>
 
@@ -149,7 +158,7 @@ export function Settings() {
       <div className="glass-card" style={{ maxWidth: "800px" }}>
         <form onSubmit={handleSubmit} className="flex-col-gap-24">
           <div className="form-group">
-            <label className="form-label">Shop Identification Name</label>
+            <label className="form-label">{t("settings.shopName")}</label>
             <input
               type="text"
               className="form-input"
@@ -162,7 +171,7 @@ export function Settings() {
 
           <div className="form-row">
             <div className="form-group" style={{ flex: 2 }}>
-              <label className="form-label">Telegram Bot API Token</label>
+              <label className="form-label">{t("settings.botToken")}</label>
               <input
                 type="password"
                 className="form-input"
@@ -172,12 +181,12 @@ export function Settings() {
                 required
               />
               <span className="form-helper" style={{ display: "block", marginTop: "4px", fontSize: "12px", color: "var(--text-muted)" }}>
-                Get this from Telegram's official @BotFather account.
+                {language === "my" ? "@BotFather ထံမှ ရရှိလာသော ဘော့တ် တိုကင်ကို ထည့်သွင်းပါ" : "Get this from Telegram's official @BotFather account."}
               </span>
             </div>
 
             <div className="form-group" style={{ flex: 1 }}>
-              <label className="form-label">Store Currency</label>
+              <label className="form-label">{t("settings.currency")}</label>
               <input
                 type="text"
                 className="form-input"
@@ -190,7 +199,7 @@ export function Settings() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Telegram Welcome Message</label>
+            <label className="form-label">{t("settings.welcomeMsg")}</label>
             <textarea
               className="form-input"
               style={{ minHeight: "100px", fontFamily: "inherit" }}
@@ -202,7 +211,7 @@ export function Settings() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Payment Instructions / Bank Transfer Guidelines</label>
+            <label className="form-label">{t("settings.paymentInstructions")}</label>
             <textarea
               className="form-input"
               style={{ minHeight: "120px", fontFamily: "inherit" }}
@@ -216,9 +225,9 @@ export function Settings() {
           <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "24px", marginTop: "12px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
               <div>
-                <h4 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>Frequently Asked Questions (FAQs)</h4>
+                <h4 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>{t("settings.faqsTitle")}</h4>
                 <p style={{ margin: "4px 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>
-                  Add up to 10 frequently asked questions to help customers automatically in the bot chat (Myanmar & English translation recommended)
+                  {t("settings.faqsSubtitle")}
                 </p>
               </div>
               {faqs.length < 10 && (
@@ -228,14 +237,14 @@ export function Settings() {
                   style={{ padding: "6px 12px", fontSize: "12px" }}
                   onClick={handleAddFaq}
                 >
-                  + Add FAQ
+                  {t("settings.addFaq")}
                 </button>
               )}
             </div>
 
             {faqs.length === 0 ? (
               <div style={{ padding: "20px", textAlign: "center", border: "1px dashed var(--border-color)", borderRadius: "8px", color: "var(--text-secondary)", fontSize: "13px" }}>
-                No FAQs configured yet. Click "+ Add FAQ" to configure automated responses.
+                {t("settings.noFaqs")}
               </div>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -266,12 +275,12 @@ export function Settings() {
                         }}
                         onClick={() => handleRemoveFaq(idx)}
                       >
-                        Remove
+                        {t("settings.remove")}
                       </button>
                     </div>
 
                     <div className="form-group" style={{ margin: 0 }}>
-                      <label className="form-label" style={{ fontSize: "12px", marginBottom: "4px" }}>Question</label>
+                      <label className="form-label" style={{ fontSize: "12px", marginBottom: "4px" }}>{t("settings.faqQuestion")}</label>
                       <input
                         type="text"
                         className="form-input"
@@ -284,7 +293,7 @@ export function Settings() {
                     </div>
 
                     <div className="form-group" style={{ margin: 0 }}>
-                      <label className="form-label" style={{ fontSize: "12px", marginBottom: "4px" }}>Answer</label>
+                      <label className="form-label" style={{ fontSize: "12px", marginBottom: "4px" }}>{t("settings.faqAnswer")}</label>
                       <textarea
                         className="form-input"
                         style={{ padding: "8px 12px", fontSize: "13px", minHeight: "60px", fontFamily: "inherit" }}
@@ -303,7 +312,7 @@ export function Settings() {
           <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: "12px", borderTop: "1px solid var(--border-color)" }}>
             <button type="submit" className="btn btn-primary flex-gap-12" disabled={saving}>
               <Save size={16} />
-              <span>{saving ? "Saving Changes..." : "Save Preferences"}</span>
+              <span>{saving ? t("settings.savingPrefs") : t("settings.savePrefs")}</span>
             </button>
           </div>
         </form>

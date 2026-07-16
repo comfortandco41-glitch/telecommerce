@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import { Plus, Search, ToggleLeft, ToggleRight, Check, Edit, Trash2 } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 export function ProductsManager() {
   const { selectedShopId, shops } = useOutletContext<{ selectedShopId: string; shops: any[] }>();
   const activeShop = shops?.find((s) => s.id === selectedShopId);
   const currencySymbol = activeShop?.currency || "USD";
+  const { language, t } = useLanguage();
   
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
@@ -46,7 +48,7 @@ export function ProductsManager() {
     if (!file) return;
 
     if (file.size > 200 * 1024) {
-      alert("File exceeds 200KB limit! Please select a smaller photo.");
+      alert(language === "my" ? "ဖိုင်ဆိုဒ်သည် 200KB ထက်ကျော်လွန်နေပါသည်။ ပိုမိုသေးငယ်သောပုံကို ရွေးချယ်ပေးပါရန်။" : "File exceeds 200KB limit! Please select a smaller photo.");
       e.target.value = "";
       return;
     }
@@ -87,18 +89,16 @@ export function ProductsManager() {
     if (!selectedShopId) return;
     setLoading(true);
     try {
-      // 1. Fetch Categories
       const catRes = await fetch(`${API_URL}/api/v1/shops/${selectedShopId}/categories`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const catJson = await catRes.json();
       const cats = catJson.success ? catJson.data : [];
       setCategories(cats);
-      if (cats.length > 0) {
+      if (cats.length > 0 && !newProdCatId) {
         setNewProdCatId(cats[0].id);
       }
 
-      // 2. Fetch Products
       const prodRes = await fetch(`${API_URL}/api/v1/shops/${selectedShopId}/products`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -113,7 +113,6 @@ export function ProductsManager() {
 
   useEffect(() => {
     fetchData();
-
     window.addEventListener("shopChanged", fetchData);
     return () => {
       window.removeEventListener("shopChanged", fetchData);
@@ -167,98 +166,70 @@ export function ProductsManager() {
     setNewProdDesc(prod.description || "");
     setNewProdPrice(prod.price.toString());
     setNewProdStock(prod.stock.toString());
-    setNewProdCatId(prod.categoryId);
+    setNewProdCatId(prod.categoryId || (categories.length > 0 ? categories[0].id : ""));
     setNewProdImage(prod.images?.[0] || "");
     setProdError("");
     setShowProductModal(true);
   };
 
   const handleDeleteProduct = async (productId: string) => {
-    if (!confirm("Are you sure you want to delete this product? / ဤပစ္စည်းကို ဖျက်ရန် သေချာပါသလား?")) return;
+    const confirm = window.confirm(
+      language === "my" ? "ဤကုန်ပစ္စည်းကို ဖျက်ပစ်ရန် သေချာပါသလား?" : "Are you sure you want to delete this product?"
+    );
+    if (!confirm) return;
 
     try {
       const res = await fetch(`${API_URL}/api/v1/shops/${selectedShopId}/products/${productId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       const json = await res.json();
       if (res.ok && json.success) {
         setProducts(products.filter((p) => p.id !== productId));
-      } else {
-        alert(json.message || "Failed to delete product");
       }
     } catch (err) {
-      console.error("Failed to delete product", err);
-      alert("Network error deleting product");
+      console.error(err);
     }
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setProdError("");
-    if (!newProdCatId) {
-      setProdError("Please create a category first before adding products.");
-      return;
-    }
     setProdLoading(true);
 
     const payload = {
-      categoryId: newProdCatId,
       name: newProdName,
       description: newProdDesc,
-      price: Number(newProdPrice),
-      stock: Number(newProdStock),
+      price: parseFloat(newProdPrice),
+      stock: parseInt(newProdStock, 10),
+      categoryId: newProdCatId,
       images: newProdImage ? [newProdImage] : [],
     };
 
+    const method = editingProduct ? "PUT" : "POST";
+    const path = editingProduct
+      ? `/api/v1/shops/${selectedShopId}/products/${editingProduct.id}`
+      : `/api/v1/shops/${selectedShopId}/products`;
+
     try {
-      if (editingProduct) {
-        // Edit product
-        const res = await fetch(`${API_URL}/api/v1/shops/${selectedShopId}/products/${editingProduct.id}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        });
+      const res = await fetch(`${API_URL}${path}`, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
 
-        const json = await res.json();
-        if (!res.ok || !json.success) {
-          throw new Error(json.message || "Failed to update product");
-        }
-
-        setProducts(products.map((p) => (p.id === editingProduct.id ? json.data : p)));
-      } else {
-        // Create new
-        const res = await fetch(`${API_URL}/api/v1/shops/${selectedShopId}/products`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        });
-
-        const json = await res.json();
-        if (!res.ok || !json.success) {
-          throw new Error(json.message || "Failed to create product");
-        }
-
-        setProducts([...products, json.data]);
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.message || "Failed to save product details");
       }
 
-      setNewProdName("");
-      setNewProdDesc("");
-      setNewProdPrice("");
-      setNewProdStock("");
-      setNewProdImage("");
-      setEditingProduct(null);
+      await fetchData();
       setShowProductModal(false);
     } catch (err: any) {
-      setProdError(err.message || "Failed to save product catalog record");
+      setProdError(err.message || "Something went wrong saving product");
     } finally {
       setProdLoading(false);
     }
@@ -308,33 +279,30 @@ export function ProductsManager() {
     }
   };
 
-  // Filter products by search query
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="page-body" style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "28px" }}>
-      {/* Product Catalog List */}
       <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
         <div className="page-header" style={{ margin: "0" }}>
           <div>
-            <h2 className="page-title">Product Catalog</h2>
-            <p className="page-subtitle">Add products, edit details, and modify inventory quantities</p>
+            <h2 className="page-title">{t("products.title")}</h2>
+            <p className="page-subtitle">{t("products.subtitle")}</p>
           </div>
           <button onClick={handleOpenAddModal} className="btn btn-primary flex-gap-12">
             <Plus size={16} />
-            <span>Add Product</span>
+            <span>{t("products.addProduct")}</span>
           </button>
         </div>
 
-        {/* Product Search Bar */}
         <div className="glass-card" style={{ padding: "16px 20px" }}>
           <div style={{ position: "relative", width: "100%", display: "flex", alignItems: "center" }}>
             <Search size={16} style={{ position: "absolute", left: "14px", color: "var(--text-muted)" }} />
             <input
               type="text"
-              placeholder="Search products by name..."
+              placeholder={language === "my" ? "ပစ္စည်းအမည်ဖြင့် ရှာဖွေရန်..." : "Search products by name..."}
               className="form-input"
               style={{ width: "100%", paddingLeft: "42px" }}
               value={search}
@@ -343,21 +311,22 @@ export function ProductsManager() {
           </div>
         </div>
 
-        {/* Products Table list */}
         <div className="glass-card" style={{ padding: "0" }}>
           {loading ? (
-            <p style={{ padding: "24px", color: "var(--text-secondary)" }}>Loading catalog records...</p>
+            <p style={{ padding: "24px", color: "var(--text-secondary)" }}>
+              {language === "my" ? "ပစ္စည်းစာရင်းများ ယူနေသည်..." : "Loading catalog records..."}
+            </p>
           ) : filteredProducts.length > 0 ? (
             <div className="data-table-container">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Product Item</th>
-                    <th>Category</th>
-                    <th>Price</th>
-                    <th>Stock</th>
-                    <th>Active</th>
-                    <th>Actions</th>
+                    <th>{language === "my" ? "ကုန်ပစ္စည်း အမည်" : "Product Item"}</th>
+                    <th>{t("products.prodCategory")}</th>
+                    <th>{t("products.prodPrice")}</th>
+                    <th>{t("products.prodStock")}</th>
+                    <th>{t("products.active")}</th>
+                    <th>{t("orders.actions")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -401,7 +370,7 @@ export function ProductsManager() {
                               }}
                               title="Click to edit stock level"
                             >
-                              {p.stock} units
+                              {p.stock} {language === "my" ? "ခု" : "units"}
                             </span>
                           )}
                         </td>
@@ -439,22 +408,24 @@ export function ProductsManager() {
             </div>
           ) : (
             <p style={{ padding: "32px", textAlign: "center", color: "var(--text-secondary)" }}>
-              No products available in this shop catalog.
+              {language === "my" ? "ကုန်ပစ္စည်း မရှိသေးပါ။" : "No products available in this shop catalog."}
             </p>
           )}
         </div>
       </div>
 
-      {/* Category Manager Sidebar Section */}
       <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-        <h3 style={{ margin: "4px 0 0", fontSize: "18px", fontWeight: "700" }}>Category Manager</h3>
+        <h3 style={{ margin: "4px 0 0", fontSize: "18px", fontWeight: "700" }}>
+          {language === "my" ? "အမျိုးအစား စီမံခန့်ခွဲရန်" : "Category Manager"}
+        </h3>
         
-        {/* Create Category form */}
         <div className="glass-card">
-          <h4 style={{ margin: "0 0 16px", fontSize: "14px", fontWeight: "600" }}>Add New Category</h4>
+          <h4 style={{ margin: "0 0 16px", fontSize: "14px", fontWeight: "600" }}>
+            {language === "my" ? "အမျိုးအစားအသစ် ထည့်ရန်" : "Add New Category"}
+          </h4>
           <form onSubmit={handleCreateCategory}>
             <div className="form-group">
-              <label className="form-label">Category Name</label>
+              <label className="form-label">{t("products.prodCategory")}</label>
               <input
                 type="text"
                 className="form-input"
@@ -465,7 +436,9 @@ export function ProductsManager() {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Description (Optional)</label>
+              <label className="form-label">
+                {language === "my" ? "ဖော်ပြချက် (မဖြစ်မနေမဟုတ်ပါ)" : "Description (Optional)"}
+              </label>
               <input
                 type="text"
                 className="form-input"
@@ -476,14 +449,15 @@ export function ProductsManager() {
             </div>
             <button type="submit" className="btn btn-secondary btn-sm flex-gap-12" style={{ width: "100%", marginTop: "6px" }} disabled={catLoading}>
               <Plus size={14} />
-              <span>Create Category</span>
+              <span>{language === "my" ? "အမျိုးအစား ဖန်တီးမည်" : "Create Category"}</span>
             </button>
           </form>
         </div>
 
-        {/* Categories List */}
         <div className="glass-card">
-          <h4 style={{ margin: "0 0 16px", fontSize: "14px", fontWeight: "600" }}>All Categories</h4>
+          <h4 style={{ margin: "0 0 16px", fontSize: "14px", fontWeight: "600" }}>
+            {language === "my" ? "အမျိုးအစားများ အားလုံး" : "All Categories"}
+          </h4>
           {categories.length > 0 ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
               {categories.map((c) => (
@@ -501,23 +475,24 @@ export function ProductsManager() {
                 >
                   <span style={{ fontWeight: "500" }}>{c.name}</span>
                   <span style={{ color: "var(--text-muted)", fontSize: "11px" }}>
-                    {c.isActive ? "Active" : "Disabled"}
+                    {c.isActive ? (language === "my" ? "ရောင်းသည်" : "Active") : (language === "my" ? "ပိတ်ထားသည်" : "Disabled")}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>No categories created yet.</p>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+              {language === "my" ? "အမျိုးအစား မရှိသေးပါ။" : "No categories created yet."}
+            </p>
           )}
         </div>
       </div>
 
-      {/* Add Product Modal Overlay */}
       {showProductModal && (
         <div className="drawer-backdrop" style={{ justifyContent: "center", alignItems: "center" }}>
           <div className="glass-card" style={{ width: "480px", padding: "32px" }}>
             <h3 style={{ margin: "0 0 20px", fontSize: "18px", fontWeight: "700" }}>
-              {editingProduct ? "Edit Product Item" : "Add New Product Item"}
+              {editingProduct ? t("products.modalEditTitle") : t("products.modalAddTitle")}
             </h3>
             
             {prodError && (
@@ -528,7 +503,7 @@ export function ProductsManager() {
 
             <form onSubmit={handleFormSubmit}>
               <div className="form-group">
-                <label className="form-label">Category Selection</label>
+                <label className="form-label">{t("products.prodCategory")}</label>
                 <select
                   className="shop-selector"
                   style={{ width: "100%" }}
@@ -545,7 +520,7 @@ export function ProductsManager() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Product Name</label>
+                <label className="form-label">{t("products.prodName")}</label>
                 <input
                   type="text"
                   className="form-input"
@@ -557,7 +532,7 @@ export function ProductsManager() {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Description</label>
+                <label className="form-label">{t("products.prodDesc")}</label>
                 <textarea
                   className="form-input"
                   style={{ minHeight: "80px", fontFamily: "inherit" }}
@@ -570,7 +545,7 @@ export function ProductsManager() {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div className="form-group">
-                  <label className="form-label">Price ({currencySymbol})</label>
+                  <label className="form-label">{t("products.prodPrice")} ({currencySymbol})</label>
                   <input
                     type="number"
                     step="0.01"
@@ -583,7 +558,7 @@ export function ProductsManager() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Initial Stock Level</label>
+                  <label className="form-label">{t("products.prodStock")}</label>
                   <input
                     type="number"
                     className="form-input"
@@ -596,7 +571,9 @@ export function ProductsManager() {
               </div>
 
               <div className="form-group" style={{ marginTop: "16px" }}>
-                <label className="form-label">Product Image Photo (Max 200KB)</label>
+                <label className="form-label">
+                  {language === "my" ? "ပစ္စည်းပုံ (အများဆုံး 200KB)" : "Product Image Photo (Max 200KB)"}
+                </label>
                 <input
                   type="file"
                   accept="image/*"
@@ -607,7 +584,7 @@ export function ProductsManager() {
                 />
                 {uploadingImage && (
                   <span style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "4px", display: "block" }}>
-                    Uploading file...
+                    {language === "my" ? "ဖိုင်တင်နေသည်..." : "Uploading file..."}
                   </span>
                 )}
                 {newProdImage && (
@@ -628,14 +605,14 @@ export function ProductsManager() {
                   className="btn btn-secondary"
                   disabled={prodLoading}
                 >
-                  Cancel
+                  {t("products.cancel")}
                 </button>
                 <button
                   type="submit"
                   className="btn btn-primary"
                   disabled={prodLoading}
                 >
-                  {prodLoading ? "Saving..." : (editingProduct ? "Save Changes" : "Add Product")}
+                  {prodLoading ? t("products.saving") : (editingProduct ? t("products.saveChanges") : t("products.addProduct"))}
                 </button>
               </div>
             </form>

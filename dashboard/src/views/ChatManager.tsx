@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useOutletContext } from "react-router-dom";
 import { MessageSquare, Send, User, MessageCircle } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 export function ChatManager() {
   const { selectedShopId } = useOutletContext<{ selectedShopId: string }>();
+  const { language, t } = useLanguage();
 
   const [customers, setCustomers] = useState<any[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
@@ -169,9 +171,9 @@ export function ChatManager() {
         <div>
           <h2 className="page-title flex-gap-12" style={{ display: "flex", alignItems: "center" }}>
             <MessageSquare size={24} style={{ color: "var(--accent-color)" }} />
-            <span>Support Center</span>
+            <span>{t("chat.title")}</span>
           </h2>
-          <p className="page-subtitle">Chat directly with shoppers in real time through your Telegram Bot</p>
+          <p className="page-subtitle">{t("chat.subtitle")}</p>
         </div>
       </div>
 
@@ -179,11 +181,13 @@ export function ChatManager() {
         {/* Customers Sidebar */}
         <div style={{ width: "300px", borderRight: "1px solid var(--border-color)", display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "16px", borderBottom: "1px solid var(--border-color)" }}>
-            <span style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)" }}>Active Customers</span>
+            <span style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-primary)" }}>{t("chat.shoppersList")}</span>
           </div>
           <div style={{ flex: 1, overflowY: "auto" }}>
             {loadingCustomers ? (
-              <p style={{ padding: "16px", color: "var(--text-secondary)", fontSize: "13px" }}>Loading shoppers...</p>
+              <p style={{ padding: "16px", color: "var(--text-secondary)", fontSize: "13px" }}>
+                {language === "my" ? "စုံစမ်းမေးမြန်းသူစာရင်း ယူနေသည်..." : "Loading shoppers..."}
+              </p>
             ) : customers.length > 0 ? (
               customers.map((c) => (
                 <div
@@ -210,7 +214,7 @@ export function ChatManager() {
                 </div>
               ))
             ) : (
-              <p style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)", fontSize: "13px" }}>No customers found</p>
+              <p style={{ padding: "20px", textAlign: "center", color: "var(--text-muted)", fontSize: "13px" }}>{t("chat.noShoppers")}</p>
             )}
           </div>
         </div>
@@ -239,7 +243,9 @@ export function ChatManager() {
               {/* Message History Thread */}
               <div style={{ flex: 1, padding: "24px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "16px" }}>
                 {loadingMessages && messages.length === 0 ? (
-                  <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>Loading chat logs...</p>
+                  <p style={{ color: "var(--text-secondary)", fontSize: "13px" }}>
+                    {language === "my" ? "မက်ဆေ့ခ်ျမှတ်တမ်း ယူနေသည်..." : "Loading chat logs..."}
+                  </p>
                 ) : messages.length > 0 ? (
                   <>
                     {messages.length < totalMessages && (
@@ -268,7 +274,7 @@ export function ChatManager() {
                           e.currentTarget.style.color = "var(--text-secondary)";
                         }}
                       >
-                        Load More History ({totalMessages - messages.length} remaining)
+                        {t("chat.loadMore")} ({totalMessages - messages.length} {language === "my" ? "ကျန်ရှိ" : "remaining"})
                       </button>
                     )}
                     {messages.map((m) => (
@@ -313,7 +319,9 @@ export function ChatManager() {
                 ) : (
                   <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}>
                     <MessageCircle size={32} style={{ marginBottom: "8px" }} />
-                    <p style={{ fontSize: "13px" }}>No support messages yet. Type below to send the first message!</p>
+                    <p style={{ fontSize: "13px" }}>
+                      {language === "my" ? "မက်ဆေ့ခ်ျ မရှိသေးပါ။ အောက်တွင် ပထမဆုံး စာတိုရိုက်ပြီး ပို့နိုင်ပါသည်။" : "No support messages yet. Type below to send the first message!"}
+                    </p>
                   </div>
                 )}
                 <div ref={messagesEndRef} />
@@ -323,7 +331,7 @@ export function ChatManager() {
               <form onSubmit={handleSendMessage} style={{ padding: "16px 24px", borderTop: "1px solid var(--border-color)", display: "flex", gap: "12px", background: "rgba(255, 255, 255, 0.01)" }}>
                 <input
                   type="text"
-                  placeholder="Type a support reply to send to customer's Telegram..."
+                  placeholder={language === "my" ? "ဝယ်ယူသူ တယ်လီဂရမ်သို့ စာပြန်ရန်..." : "Type a support reply to send to customer's Telegram..."}
                   className="form-input"
                   style={{ flex: 1 }}
                   value={text}
@@ -339,7 +347,7 @@ export function ChatManager() {
           ) : (
             <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--text-muted)" }}>
               <MessageSquare size={48} style={{ marginBottom: "16px", color: "rgba(255, 255, 255, 0.1)" }} />
-              <p style={{ fontSize: "14px" }}>Select a shopper from the left menu to start messaging</p>
+              <p style={{ fontSize: "14px" }}>{t("chat.noMessages")}</p>
             </div>
           )}
         </div>

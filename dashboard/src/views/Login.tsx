@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../context/LanguageContext";
 
 export function Login() {
   const navigate = useNavigate();
+  const { language, setLanguage, t } = useLanguage();
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,11 +52,47 @@ export function Login() {
   return (
     <div className="auth-page">
       <div className="glass-card auth-card">
+        {/* Language Switcher */}
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: "6px", marginBottom: "16px" }}>
+          <button
+            type="button"
+            onClick={() => setLanguage("en")}
+            style={{
+              padding: "4px 8px",
+              borderRadius: "4px",
+              border: "1px solid var(--border-color)",
+              backgroundColor: language === "en" ? "var(--accent-color)" : "transparent",
+              color: language === "en" ? "#fff" : "var(--text-secondary)",
+              cursor: "pointer",
+              fontSize: "11px",
+              fontWeight: "600",
+            }}
+          >
+            🇬🇧 EN
+          </button>
+          <button
+            type="button"
+            onClick={() => setLanguage("my")}
+            style={{
+              padding: "4px 8px",
+              borderRadius: "4px",
+              border: "1px solid var(--border-color)",
+              backgroundColor: language === "my" ? "var(--accent-color)" : "transparent",
+              color: language === "my" ? "#fff" : "var(--text-secondary)",
+              cursor: "pointer",
+              fontSize: "11px",
+              fontWeight: "600",
+            }}
+          >
+            🇲🇲 မြန်မာ
+          </button>
+        </div>
+
         <div className="auth-header" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
           <img src="/logo.png" alt="Tele-Commerce Logo" style={{ width: "64px", height: "64px", objectFit: "contain", marginBottom: "16px" }} />
-          <h2 className="auth-title" style={{ margin: "0 0 4px" }}>Tele-Commerce</h2>
+          <h2 className="auth-title" style={{ margin: "0 0 4px" }}>{t("brandName")}</h2>
           <p className="auth-subtitle">
-            {isRegister ? "Register a Merchant Account" : "Log in to Shop Dashboard"}
+            {isRegister ? t("auth.registerTitle") : t("auth.loginTitle")}
           </p>
         </div>
 
@@ -78,11 +116,11 @@ export function Login() {
         <form onSubmit={handleSubmit}>
           {isRegister && (
             <div className="form-group">
-              <label className="form-label">Full Name</label>
+              <label className="form-label">{t("auth.name")}</label>
               <input
                 type="text"
                 className="form-input"
-                placeholder="John Doe"
+                placeholder={t("auth.namePlaceholder")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -91,11 +129,11 @@ export function Login() {
           )}
 
           <div className="form-group">
-            <label className="form-label">Email Address</label>
+            <label className="form-label">{t("auth.email")}</label>
             <input
               type="email"
               className="form-input"
-              placeholder="name@company.com"
+              placeholder={t("auth.emailPlaceholder")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -103,11 +141,11 @@ export function Login() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Password</label>
+            <label className="form-label">{t("auth.password")}</label>
             <input
               type="password"
               className="form-input"
-              placeholder="••••••••"
+              placeholder={t("auth.passwordPlaceholder")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -115,12 +153,16 @@ export function Login() {
           </div>
 
           <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "12px" }} disabled={loading}>
-            {loading ? "Please wait..." : isRegister ? "Create Account" : "Sign In"}
+            {loading
+              ? t(isRegister ? "auth.registering" : "auth.signingIn")
+              : isRegister
+              ? t("auth.registerBtn")
+              : t("auth.loginBtn")}
           </button>
         </form>
 
         <div style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", color: "var(--text-secondary)" }}>
-          {isRegister ? "Already have an account?" : "New to Tele-Commerce?"}{" "}
+          {isRegister ? t("auth.alreadyHaveAccount") : t("auth.newToBrand")}{" "}
           <span
             style={{ color: "var(--accent-color)", cursor: "pointer", fontWeight: "600" }}
             onClick={() => {
@@ -128,7 +170,7 @@ export function Login() {
               setError("");
             }}
           >
-            {isRegister ? "Sign In" : "Register here"}
+            {isRegister ? t("auth.loginBtn") : t("auth.registerBtn")}
           </span>
         </div>
       </div>

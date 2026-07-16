@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { DollarSign, Users, BarChart3, AlertCircle } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 export function Overview() {
   const { selectedShopId, shops } = useOutletContext<{ selectedShopId: string; shops: any[] }>();
   const activeShop = shops?.find((s) => s.id === selectedShopId);
   const currencySymbol = activeShop?.currency || "USD";
+  const { language, t } = useLanguage();
 
   const [orders, setOrders] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
@@ -103,7 +105,9 @@ export function Overview() {
   if (loading) {
     return (
       <div className="page-body">
-        <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>Loading shop metrics...</p>
+        <p style={{ color: "var(--text-secondary)", fontSize: "14px" }}>
+          {language === "my" ? "အရောင်းမှတ်တမ်းများ ယူနေသည်..." : "Loading shop metrics..."}
+        </p>
       </div>
     );
   }
@@ -112,8 +116,10 @@ export function Overview() {
     <div className="page-body">
       <div className="page-header">
         <div>
-          <h2 className="page-title">Shop Overview</h2>
-          <p className="page-subtitle">Real-time analytical insights and revenue summary</p>
+          <h2 className="page-title">{language === "my" ? "အရောင်းမှတ်တမ်း" : "Shop Overview"}</h2>
+          <p className="page-subtitle">
+            {language === "my" ? "အရောင်းစာရင်းနှင့် ဝင်ငွေအခြေအနေများကို ချက်ချင်းစစ်ဆေးပါ" : "Real-time analytical insights and revenue summary"}
+          </p>
         </div>
       </div>
 
@@ -121,34 +127,40 @@ export function Overview() {
       <div className="metrics-grid">
         <div className="glass-card metric-card">
           <div className="flex-row-between">
-            <span className="metric-label">Total Revenue</span>
+            <span className="metric-label">{t("overview.totalRevenue")}</span>
             <DollarSign size={18} style={{ color: "var(--accent-color)" }} />
           </div>
           <h3 className="metric-value">{currencySymbol} {totalRevenue.toFixed(2)}</h3>
           <div className="metric-footer">
-            <span className="metric-trend-up">★ Paid orders sum</span>
+            <span className="metric-trend-up">
+              {language === "my" ? "★ ပေးချေပြီး အရောင်းငွေ" : "★ Paid orders sum"}
+            </span>
           </div>
         </div>
 
         <div className="glass-card metric-card">
           <div className="flex-row-between">
-            <span className="metric-label">Active Customers</span>
+            <span className="metric-label">{language === "my" ? "ဝယ်ယူသူအရေအတွက်" : "Active Customers"}</span>
             <Users size={18} style={{ color: "var(--accent-color)" }} />
           </div>
           <h3 className="metric-value">{activeCustomerCount}</h3>
           <div className="metric-footer">
-            <span className="metric-trend-up">★ Registered chat users</span>
+            <span className="metric-trend-up">
+              {language === "my" ? "★ ဘော့တ်ဝင်ရောက်သူများ" : "★ Registered chat users"}
+            </span>
           </div>
         </div>
 
         <div className="glass-card metric-card">
           <div className="flex-row-between">
-            <span className="metric-label">Conversion Rate</span>
+            <span className="metric-label">{language === "my" ? "ဝယ်ယူမှုနှုန်း" : "Conversion Rate"}</span>
             <BarChart3 size={18} style={{ color: "var(--accent-color)" }} />
           </div>
           <h3 className="metric-value">{conversionRate}%</h3>
           <div className="metric-footer">
-            <span className="metric-trend-up">★ Purchases per visitor</span>
+            <span className="metric-trend-up">
+              {language === "my" ? "★ ဝယ်ယူသူ ရာခိုင်နှုန်း" : "★ Purchases per visitor"}
+            </span>
           </div>
         </div>
 
@@ -158,7 +170,7 @@ export function Overview() {
           }`}
         >
           <div className="flex-row-between">
-            <span className="metric-label">Receipts Pending</span>
+            <span className="metric-label">{language === "my" ? "ပြေစာစစ်ဆေးရန်ကျန်" : "Receipts Pending"}</span>
             <AlertCircle
               size={18}
               style={{
@@ -181,7 +193,9 @@ export function Overview() {
                 fontWeight: pendingVerificationCount > 0 ? "600" : "400",
               }}
             >
-              {pendingVerificationCount > 0 ? "● Action required" : "✓ All clean"}
+              {pendingVerificationCount > 0
+                ? (language === "my" ? "● ဆောင်ရွက်ရန်ကျန်သည်" : "● Action required")
+                : (language === "my" ? "✓ အားလုံးပြီးစီး" : "✓ All clean")}
             </span>
           </div>
         </div>
@@ -189,9 +203,11 @@ export function Overview() {
 
       {/* Sales Velocity Chart */}
       <div className="glass-card" style={{ padding: "32px" }}>
-        <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: "700" }}>Weekly Sales Velocity</h3>
+        <h3 style={{ margin: "0 0 12px", fontSize: "16px", fontWeight: "700" }}>
+          {language === "my" ? "အပတ်စဉ်အရောင်းမှတ်တမ်း" : "Weekly Sales Velocity"}
+        </h3>
         <p style={{ color: "var(--text-secondary)", fontSize: "13px", marginBottom: "24px" }}>
-          Aggregated revenue aggregated across the current week
+          {language === "my" ? "ယခုတစ်ပတ်အတွင်း ဝင်ငွေမှတ်တမ်းစုစုပေါင်း" : "Aggregated revenue aggregated across the current week"}
         </p>
 
         <div className="chart-container">
