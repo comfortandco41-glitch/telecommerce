@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { CreditCard, Award, Flame, Zap, ShieldCheck } from "lucide-react";
+import { useLanguage } from "../context/LanguageContext";
 
 export function Subscription() {
+  const { t } = useLanguage();
   const [merchant, setMerchant] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -83,6 +85,32 @@ export function Subscription() {
           <span style={{ fontSize: "15px", fontWeight: "600", color: "var(--text-primary)" }}>
             {merchant?.subscriptionExpiresAt ? formatDate(merchant.subscriptionExpiresAt) : "No active subscription"}
           </span>
+        </div>
+      </div>
+
+      {/* Contact Info Banner */}
+      <div 
+        className="glass-card" 
+        style={{ 
+          background: "linear-gradient(135deg, rgba(168, 85, 247, 0.15) 0%, rgba(147, 51, 234, 0.05) 100%)",
+          border: "1px solid rgba(168, 85, 247, 0.3)",
+          borderRadius: "12px",
+          padding: "16px 24px",
+          marginBottom: "32px",
+          display: "flex",
+          alignItems: "center",
+          gap: "14px",
+          color: "var(--text-primary)",
+          fontWeight: "600",
+          fontSize: "14px",
+          boxShadow: "0 4px 20px rgba(168, 85, 247, 0.05)"
+        }}
+      >
+        <div style={{ background: "var(--accent-color)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", fontWeight: "bold", fontSize: "14px", flexShrink: 0 }}>
+          i
+        </div>
+        <div>
+          {t("subscription.contactInfo")}
         </div>
       </div>
 

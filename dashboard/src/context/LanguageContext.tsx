@@ -68,6 +68,9 @@ const translations = {
       subscription: "Subscription",
       logout: "Log Out"
     },
+    subscription: {
+      contactInfo: "To buy subscription contact @TCsub_bot in telegram"
+    },
     // Overview Dashboard
     overview: {
       title: "Performance Overview",
@@ -242,6 +245,9 @@ const translations = {
       settings: "ဆက်တင်များ",
       subscription: "ဝန်ဆောင်မှုအဆင့်မြှင့်တင်ရန်",
       logout: "ထွက်ရန်"
+    },
+    subscription: {
+      contactInfo: "အစီအစဉ်များ ဝယ်ယူရန် တယ်လီဂရမ်မှ @TCsub_bot သို့ ဆက်သွယ်ပါ"
     },
     // Overview Dashboard
     overview: {
