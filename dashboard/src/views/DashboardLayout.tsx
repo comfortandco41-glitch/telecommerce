@@ -125,7 +125,10 @@ export function DashboardLayout() {
     <div className="dashboard-container">
       {/* Sidebar navigation */}
       <aside className="sidebar">
-        <div className="sidebar-logo">Tele-Commerce</div>
+        <div className="sidebar-logo" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <img src="/logo.png" alt="Tele-Commerce Logo" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
+          <span>Tele-Commerce</span>
+        </div>
         <nav className="sidebar-nav">
           <Link
             to="/overview"

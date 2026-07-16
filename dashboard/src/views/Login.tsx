@@ -50,8 +50,9 @@ export function Login() {
   return (
     <div className="auth-page">
       <div className="glass-card auth-card">
-        <div className="auth-header">
-          <h2 className="auth-title">Tele-Commerce</h2>
+        <div className="auth-header" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <img src="/logo.png" alt="Tele-Commerce Logo" style={{ width: "64px", height: "64px", objectFit: "contain", marginBottom: "16px" }} />
+          <h2 className="auth-title" style={{ margin: "0 0 4px" }}>Tele-Commerce</h2>
           <p className="auth-subtitle">
             {isRegister ? "Register a Merchant Account" : "Log in to Shop Dashboard"}
           </p>
