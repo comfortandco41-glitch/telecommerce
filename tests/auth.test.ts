@@ -20,13 +20,6 @@ const JWT_SECRET = process.env.JWT_SECRET || "local-jwt-secret-key-32-bytes-long
 describe("Merchant Authentication API", () => {
   beforeEach(() => {
     mockReset(prismaMock);
-    if ((globalThis as any).supabaseMocks) {
-      (globalThis as any).supabaseMocks.signUpError = null;
-      (globalThis as any).supabaseMocks.signInError = null;
-      (globalThis as any).supabaseMocks.verifyOtpError = null;
-      (globalThis as any).supabaseMocks.resetPasswordError = null;
-      (globalThis as any).supabaseMocks.updateUserError = null;
-    }
   });
 
   const email = "merchant@test.com";
@@ -70,21 +63,6 @@ describe("Merchant Authentication API", () => {
     });
   });
 
-  describe("POST /api/v1/auth/verify-otp", () => {
-    it("should successfully verify OTP and return a token", async () => {
-      prismaMock.merchant.findUnique.mockResolvedValue({ id: merchantId, email, name });
-
-      const response = await request(app)
-        .post("/api/v1/auth/verify-otp")
-        .send({ email, code: "123456" });
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-      expect(response.body.data.token).toBeDefined();
-      expect(response.body.data.merchant.email).toBe(email);
-    });
-  });
-
   describe("POST /api/v1/auth/login", () => {
     it("should successfully authenticate merchant and return a token", async () => {
       const passwordHash = await bcrypt.hash(password, 10);
@@ -101,9 +79,6 @@ describe("Merchant Authentication API", () => {
     });
 
     it("should reject login on invalid credentials", async () => {
-      if ((globalThis as any).supabaseMocks) {
-        (globalThis as any).supabaseMocks.signInError = new Error("Invalid email or password");
-      }
       prismaMock.merchant.findUnique.mockResolvedValue(null);
 
       const response = await request(app)
@@ -113,33 +88,6 @@ describe("Merchant Authentication API", () => {
       expect(response.status).toBe(401);
       expect(response.body.success).toBe(false);
       expect(response.body.error.code).toBe("UNAUTHORIZED");
-    });
-  });
-
-  describe("POST /api/v1/auth/forgot-password", () => {
-    it("should trigger recovery email", async () => {
-      prismaMock.merchant.findUnique.mockResolvedValue({ id: merchantId, email });
-
-      const response = await request(app)
-        .post("/api/v1/auth/forgot-password")
-        .send({ email });
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
-    });
-  });
-
-  describe("POST /api/v1/auth/reset-password", () => {
-    it("should verify recovery code and update password", async () => {
-      prismaMock.merchant.findUnique.mockResolvedValue({ id: merchantId, email });
-      prismaMock.merchant.update.mockResolvedValue({ id: merchantId, email });
-
-      const response = await request(app)
-        .post("/api/v1/auth/reset-password")
-        .send({ email, code: "654321", newPassword: "newsecurepassword123" });
-
-      expect(response.status).toBe(200);
-      expect(response.body.success).toBe(true);
     });
   });
 

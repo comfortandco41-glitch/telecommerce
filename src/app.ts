@@ -3,7 +3,7 @@ import cors from "cors";
 import { WebhookController } from "./controllers/webhookController";
 import { CategoryController } from "./controllers/categoryController";
 import { ProductController } from "./controllers/productController";
-import { handleRegister, handleLogin, handleMe, handleVerifyOtp, handleForgotPassword, handleResetPassword } from "./controllers/authController";
+import { handleRegister, handleLogin, handleMe } from "./controllers/authController";
 import { handleGetShops, handleCreateShop, handleUpdateShop } from "./controllers/shopController";
 import { handleGetOrders, handleUpdateStatus } from "./controllers/orderController";
 import { handleGetCustomers } from "./controllers/customerController";
@@ -48,10 +48,7 @@ app.post("/api/v1/webhook/:shopId", webhookRateLimiter, webhookController.handle
 
 // Auth Routes
 app.post("/api/v1/auth/register", authRateLimiter, handleRegister);
-app.post("/api/v1/auth/verify-otp", authRateLimiter, handleVerifyOtp);
 app.post("/api/v1/auth/login", authRateLimiter, handleLogin);
-app.post("/api/v1/auth/forgot-password", authRateLimiter, handleForgotPassword);
-app.post("/api/v1/auth/reset-password", authRateLimiter, handleResetPassword);
 app.get("/api/v1/auth/me", authMiddleware, handleMe);
 app.get("/api/v1/shops", authMiddleware, handleGetShops);
 app.post("/api/v1/shops", authMiddleware, handleCreateShop);

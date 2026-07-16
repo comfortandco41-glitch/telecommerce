@@ -7,12 +7,9 @@ export function Login() {
   const navigate = useNavigate();
   const { language, setLanguage, t } = useLanguage();
   const [isRegister, setIsRegister] = useState(false);
-  const [step, setStep] = useState<"AUTH" | "VERIFY_OTP" | "FORGOT_PASSWORD" | "RESET_PASSWORD">("AUTH");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [code, setCode] = useState("");
-  const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -33,7 +30,7 @@ export function Login() {
 
         const json = await res.json();
         if (!res.ok || !json.success) {
-          throw new Error(json.message || "Failed to initiate registration");
+          throw new Error(json.message || "Failed to register account");
         }
 
         // Save credentials in storage and redirect immediately
@@ -73,86 +70,6 @@ export function Login() {
     }
   };
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/v1/auth/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code }),
-      });
-
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.message || "Verification failed");
-      }
-
-      localStorage.setItem("token", json.data.token);
-      localStorage.setItem("merchantName", json.data.merchant.name);
-      localStorage.setItem("merchantEmail", json.data.merchant.email);
-
-      navigate("/overview");
-    } catch (err: any) {
-      setError(err.message || "Verification failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/v1/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.message || "Failed to request code");
-      }
-
-      setStep("RESET_PASSWORD");
-      setError("");
-    } catch (err: any) {
-      setError(err.message || "Forgot password request failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/v1/auth/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code, newPassword }),
-      });
-
-      const json = await res.json();
-      if (!res.ok || !json.success) {
-        throw new Error(json.message || "Password reset failed");
-      }
-
-      setStep("AUTH");
-      setIsRegister(false);
-      setError("");
-      alert(language === "my" ? "လျှို့ဝှက်နံပါတ် ပြောင်းလဲမှု အောင်မြင်ပါသည်။" : "Password updated successfully. You can now log in.");
-    } catch (err: any) {
-      setError(err.message || "Failed to reset password");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="auth-page">
       <div className="auth-container">
@@ -178,8 +95,8 @@ export function Login() {
                   <Bot size={20} />
                 </div>
                 <div className="feature-content">
-                  <h3 className="feature-heading">{t("authShowcase.botAutoTitle")}</h3>
-                  <p className="feature-desc">{t("authShowcase.botAutoDesc")}</p>
+                  <h3 className="feature-title">{t("authShowcase.botAutoTitle")}</h3>
+                  <p className="feature-description">{t("authShowcase.botAutoDesc")}</p>
                 </div>
               </div>
               
@@ -188,8 +105,8 @@ export function Login() {
                   <Clock size={20} />
                 </div>
                 <div className="feature-content">
-                  <h3 className="feature-heading">{t("authShowcase.receiptTitle")}</h3>
-                  <p className="feature-desc">{t("authShowcase.receiptDesc")}</p>
+                  <h3 className="feature-title">{t("authShowcase.receiptTitle")}</h3>
+                  <p className="feature-description">{t("authShowcase.receiptDesc")}</p>
                 </div>
               </div>
               
@@ -198,8 +115,8 @@ export function Login() {
                   <MessageSquare size={20} />
                 </div>
                 <div className="feature-content">
-                  <h3 className="feature-heading">{t("authShowcase.supportTitle")}</h3>
-                  <p className="feature-desc">{t("authShowcase.supportDesc")}</p>
+                  <h3 className="feature-title">{t("authShowcase.supportTitle")}</h3>
+                  <p className="feature-description">{t("authShowcase.supportDesc")}</p>
                 </div>
               </div>
               
@@ -208,29 +125,26 @@ export function Login() {
                   <Layers size={20} />
                 </div>
                 <div className="feature-content">
-                  <h3 className="feature-heading">{t("authShowcase.limitTitle")}</h3>
-                  <p className="feature-desc">{t("authShowcase.limitDesc")}</p>
+                  <h3 className="feature-title">{t("authShowcase.limitTitle")}</h3>
+                  <p className="feature-description">{t("authShowcase.limitDesc")}</p>
                 </div>
               </div>
             </div>
           </div>
-          
-          <div className="showcase-footer">
-            <span>Powered by Tele-Commerce Bot Engine v2.0</span>
-          </div>
         </div>
-
-        {/* Right Side: Auth Form */}
+        
+        {/* Right Side: Glassmorphism Form Card */}
         <div className="auth-form-side">
           <div className="auth-card">
-            {/* Language Switcher */}
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "6px", marginBottom: "16px" }}>
+            
+            {/* Language Selector */}
+            <div style={{ display: "flex", gap: "6px", justifyContent: "flex-end", marginBottom: "20px" }}>
               <button
                 type="button"
                 onClick={() => setLanguage("en")}
                 style={{
                   padding: "4px 8px",
-                  borderRadius: "4px",
+                  borderRadius: "6px",
                   border: "1px solid var(--border-color)",
                   backgroundColor: language === "en" ? "var(--accent-color)" : "transparent",
                   color: language === "en" ? "#fff" : "var(--text-secondary)",
@@ -239,14 +153,14 @@ export function Login() {
                   fontWeight: "600",
                 }}
               >
-                🇬🇧 EN
+                🇺🇸 English
               </button>
               <button
                 type="button"
                 onClick={() => setLanguage("my")}
                 style={{
                   padding: "4px 8px",
-                  borderRadius: "4px",
+                  borderRadius: "6px",
                   border: "1px solid var(--border-color)",
                   backgroundColor: language === "my" ? "var(--accent-color)" : "transparent",
                   color: language === "my" ? "#fff" : "var(--text-secondary)",
@@ -276,237 +190,74 @@ export function Login() {
               </div>
             )}
 
-            {step === "AUTH" && (
-              <>
-                <div className="auth-header" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <img src="/logo.png" alt="Tele-Commerce Logo" style={{ width: "64px", height: "64px", objectFit: "contain", marginBottom: "16px" }} />
-                  <h2 className="auth-title" style={{ margin: "0 0 4px" }}>{t("brandName")}</h2>
-                  <p className="auth-subtitle">
-                    {isRegister ? t("auth.registerTitle") : t("auth.loginTitle")}
-                  </p>
+            <div className="auth-header" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+              <img src="/logo.png" alt="Tele-Commerce Logo" style={{ width: "64px", height: "64px", objectFit: "contain", marginBottom: "16px" }} />
+              <h2 className="auth-title" style={{ margin: "0 0 4px" }}>{t("brandName")}</h2>
+              <p className="auth-subtitle">
+                {isRegister ? t("auth.registerTitle") : t("auth.loginTitle")}
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit}>
+              {isRegister && (
+                <div className="form-group">
+                  <label className="form-label">{t("auth.name")}</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder={t("auth.namePlaceholder")}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
                 </div>
+              )}
 
-                <form onSubmit={handleSubmit}>
-                  {isRegister && (
-                    <div className="form-group">
-                      <label className="form-label">{t("auth.name")}</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder={t("auth.namePlaceholder")}
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                      />
-                    </div>
-                  )}
+              <div className="form-group">
+                <label className="form-label">{t("auth.email")}</label>
+                <input
+                  type="email"
+                  className="form-input"
+                  placeholder={t("auth.emailPlaceholder")}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
 
-                  <div className="form-group">
-                    <label className="form-label">{t("auth.email")}</label>
-                    <input
-                      type="email"
-                      className="form-input"
-                      placeholder={t("auth.emailPlaceholder")}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
+              <div className="form-group">
+                <label className="form-label">{t("auth.password")}</label>
+                <input
+                  type="password"
+                  className="form-input"
+                  placeholder={t("auth.passwordPlaceholder")}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
 
-                  <div className="form-group">
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <label className="form-label" style={{ margin: 0 }}>{t("auth.password")}</label>
-                      {!isRegister && (
-                        <span
-                          style={{ fontSize: "12px", color: "var(--accent-color)", cursor: "pointer", fontWeight: "500" }}
-                          onClick={() => {
-                            setStep("FORGOT_PASSWORD");
-                            setError("");
-                          }}
-                        >
-                          {t("auth.forgotPassword")}
-                        </span>
-                      )}
-                    </div>
-                    <input
-                      type="password"
-                      className="form-input"
-                      placeholder={t("auth.passwordPlaceholder")}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
+              <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "12px" }} disabled={loading}>
+                {loading
+                  ? t(isRegister ? "auth.registering" : "auth.signingIn")
+                  : isRegister
+                  ? t("auth.registerBtn")
+                  : t("auth.loginBtn")}
+              </button>
+            </form>
 
-                  <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "12px" }} disabled={loading}>
-                    {loading
-                      ? t(isRegister ? "auth.registering" : "auth.signingIn")
-                      : isRegister
-                      ? t("auth.registerBtn")
-                      : t("auth.loginBtn")}
-                  </button>
-                </form>
-
-                <div style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", color: "var(--text-secondary)" }}>
-                  {isRegister ? t("auth.alreadyHaveAccount") : t("auth.newToBrand")}{" "}
-                  <span
-                    style={{ color: "var(--accent-color)", cursor: "pointer", fontWeight: "600" }}
-                    onClick={() => {
-                      setIsRegister(!isRegister);
-                      setError("");
-                    }}
-                  >
-                    {isRegister ? t("auth.loginBtn") : t("auth.registerBtn")}
-                  </span>
-                </div>
-              </>
-            )}
-
-            {step === "VERIFY_OTP" && (
-              <>
-                <div className="auth-header" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <h2 className="auth-title" style={{ margin: "0 0 8px" }}>{t("auth.verifyOtpTitle")}</h2>
-                  <p className="auth-subtitle" style={{ fontSize: "13px", lineHeight: "1.4" }}>
-                    {t("auth.verifyOtpSubtitle")} (<strong>{email}</strong>).
-                  </p>
-                </div>
-
-                <form onSubmit={handleVerifyOtp}>
-                  <div className="form-group">
-                    <label className="form-label">{t("auth.otpCode")}</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="e.g. 123456"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "12px" }} disabled={loading}>
-                    {loading ? t("auth.verifying") : t("auth.verifyBtn")}
-                  </button>
-                </form>
-
-                <div style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <span
-                    style={{ color: "var(--accent-color)", cursor: "pointer", fontWeight: "600" }}
-                    onClick={() => {
-                      setStep("AUTH");
-                      setIsRegister(false);
-                      setError("");
-                    }}
-                  >
-                    {t("auth.useLinkLogin")}
-                  </span>
-
-                  <span
-                    style={{ color: "var(--text-muted)", cursor: "pointer" }}
-                    onClick={() => {
-                      setStep("AUTH");
-                      setError("");
-                    }}
-                  >
-                    {t("auth.backToLogin")}
-                  </span>
-                </div>
-              </>
-            )}
-
-            {step === "FORGOT_PASSWORD" && (
-              <>
-                <div className="auth-header" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <h2 className="auth-title" style={{ margin: "0 0 8px" }}>{t("auth.forgotPasswordTitle")}</h2>
-                  <p className="auth-subtitle" style={{ fontSize: "13px", lineHeight: "1.4" }}>
-                    {t("auth.forgotPasswordSubtitle")}
-                  </p>
-                </div>
-
-                <form onSubmit={handleForgotPassword}>
-                  <div className="form-group">
-                    <label className="form-label">{t("auth.email")}</label>
-                    <input
-                      type="email"
-                      className="form-input"
-                      placeholder={t("auth.emailPlaceholder")}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "12px" }} disabled={loading}>
-                    {loading ? t("auth.sendingReset") : t("auth.sendResetBtn")}
-                  </button>
-                </form>
-
-                <div style={{ textAlign: "center", marginTop: "20px", fontSize: "13px" }}>
-                  <span
-                    style={{ color: "var(--text-muted)", cursor: "pointer" }}
-                    onClick={() => {
-                      setStep("AUTH");
-                      setError("");
-                    }}
-                  >
-                    {t("auth.backToLogin")}
-                  </span>
-                </div>
-              </>
-            )}
-
-            {step === "RESET_PASSWORD" && (
-              <>
-                <div className="auth-header" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <h2 className="auth-title" style={{ margin: "0 0 8px" }}>{t("auth.resetPasswordTitle")}</h2>
-                  <p className="auth-subtitle" style={{ fontSize: "13px" }}>
-                    Enter reset code sent to <strong>{email}</strong>
-                  </p>
-                </div>
-
-                <form onSubmit={handleResetPassword}>
-                  <div className="form-group">
-                    <label className="form-label">{t("auth.otpCode")}</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="e.g. 654321"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">{t("auth.newPassword")}</label>
-                    <input
-                      type="password"
-                      className="form-input"
-                      placeholder={t("auth.newPasswordPlaceholder")}
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "12px" }} disabled={loading}>
-                    {loading ? t("auth.saving") : t("auth.resetBtn")}
-                  </button>
-                </form>
-
-                <div style={{ textAlign: "center", marginTop: "20px", fontSize: "13px" }}>
-                  <span
-                    style={{ color: "var(--text-muted)", cursor: "pointer" }}
-                    onClick={() => {
-                      setStep("AUTH");
-                      setError("");
-                    }}
-                  >
-                    {t("auth.backToLogin")}
-                  </span>
-                </div>
-              </>
-            )}
+            <div style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", color: "var(--text-secondary)" }}>
+              {isRegister ? t("auth.alreadyHaveAccount") : t("auth.newToBrand")}{" "}
+              <span
+                style={{ color: "var(--accent-color)", cursor: "pointer", fontWeight: "600" }}
+                onClick={() => {
+                  setIsRegister(!isRegister);
+                  setError("");
+                }}
+              >
+                {isRegister ? t("auth.loginBtn") : t("auth.registerBtn")}
+              </span>
+            </div>
 
           </div>
         </div>
