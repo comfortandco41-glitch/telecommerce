@@ -385,7 +385,18 @@ export function Login() {
                   </button>
                 </form>
 
-                <div style={{ textAlign: "center", marginTop: "20px", fontSize: "13px" }}>
+                <div style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <span
+                    style={{ color: "var(--accent-color)", cursor: "pointer", fontWeight: "600" }}
+                    onClick={() => {
+                      setStep("AUTH");
+                      setIsRegister(false);
+                      setError("");
+                    }}
+                  >
+                    {t("auth.useLinkLogin")}
+                  </span>
+
                   <span
                     style={{ color: "var(--text-muted)", cursor: "pointer" }}
                     onClick={() => {

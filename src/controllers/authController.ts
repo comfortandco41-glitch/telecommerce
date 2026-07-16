@@ -151,7 +151,33 @@ export async function handleLogin(
     });
 
     if (signInError) {
-      return next(new AppError(signInError.message || "Invalid email or password", 401, "UNAUTHORIZED"));
+      // Fallback to local PostgreSQL password check for backward compatibility
+      const merchant = await merchantRepo.getByEmail(email);
+      if (!merchant) {
+        return next(new AppError(signInError.message || "Invalid email or password", 401, "UNAUTHORIZED"));
+      }
+
+      const isMatch = await bcrypt.compare(password, merchant.passwordHash);
+      if (!isMatch) {
+        return next(new AppError("Invalid email or password", 401, "UNAUTHORIZED"));
+      }
+
+      const token = jwt.sign({ id: merchant.id, email: merchant.email }, JWT_SECRET, {
+        expiresIn: "7d",
+      });
+
+      res.status(200).json({
+        success: true,
+        data: {
+          token,
+          merchant: {
+            id: merchant.id,
+            email: merchant.email,
+            name: merchant.name,
+          },
+        },
+      });
+      return;
     }
 
     const merchant = await merchantRepo.getByEmail(email);

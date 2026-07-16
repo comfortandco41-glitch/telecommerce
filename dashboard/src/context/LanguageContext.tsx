@@ -42,7 +42,8 @@ const translations = {
       newPasswordPlaceholder: "Enter new password (min 6 chars)",
       resetBtn: "Reset Password",
       resending: "Resending...",
-      backToLogin: "Back to Log In"
+      backToLogin: "Back to Log In",
+      useLinkLogin: "Received a confirmation link instead? Click here to Log In."
     },
     authShowcase: {
       tagline: "BUILD & GROW YOUR TELEGRAM SHOP",
@@ -216,7 +217,8 @@ const translations = {
       newPasswordPlaceholder: "လျှို့ဝှက်နံပါတ် အသစ် (အနည်းဆုံး ၆ လုံး)",
       resetBtn: "လျှို့ဝှက်နံပါတ် ပြောင်းမည်",
       resending: "ထပ်မံပို့နေသည်...",
-      backToLogin: "လော့ဂ်အင်စာမျက်နှာသို့ ပြန်သွားမည်"
+      backToLogin: "လော့ဂ်အင်စာမျက်နှာသို့ ပြန်သွားမည်",
+      useLinkLogin: "အတည်ပြုလင့်ခ် ရရှိပါသလား? ဤနေရာကိုနှိပ်၍ လော့ဂ်အင်ဝင်ပါ။"
     },
     authShowcase: {
       tagline: "တယ်လီဂရမ်အရောင်းစနစ် တည်ဆောက်ပါ",
