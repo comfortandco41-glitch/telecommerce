@@ -1,0 +1,37 @@
+services:
+  # Backend API Server
+  - type: web
+    name: superbot-backend
+    env: node
+    plan: starter # Starter plan or free plan
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: node dist/src/index.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false # You will enter your Supabase Connection Pooler URL during setup
+      - key: JWT_SECRET
+        generateValue: true # Render will automatically generate a secure key for you
+      - key: SUPABASE_URL
+        sync: false # You will enter your Supabase URL
+      - key: SUPABASE_KEY
+        sync: false # You will enter your Supabase Publishable Key
+
+  # Frontend Dashboard
+  - type: web
+    name: superbot-dashboard
+    env: static
+    buildCommand: npm install && npm run build --prefix dashboard
+    publishPath: dashboard/dist
+    routes:
+      # React Router client-side routing fallback rule
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: superbot-backend
+          property: host
