@@ -13,6 +13,11 @@ export function Overview() {
   const [customers, setCustomers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Date filtering state
+  const [dateRangeType, setDateRangeType] = useState<string>("all");
+  const [customStartDate, setCustomStartDate] = useState<string>("");
+  const [customEndDate, setCustomEndDate] = useState<string>("");
+
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:10000";
   const token = localStorage.getItem("token");
 
@@ -51,11 +56,53 @@ export function Overview() {
     };
   }, [selectedShopId]);
 
+  // Date filtering logic
+  const filterByDateRange = (itemDateStr: string) => {
+    if (dateRangeType === "all") return true;
+
+    const date = new Date(itemDateStr);
+    const now = new Date();
+
+    if (dateRangeType === "today") {
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return date >= today;
+    }
+
+    if (dateRangeType === "7days") {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(now.getDate() - 7);
+      return date >= sevenDaysAgo;
+    }
+
+    if (dateRangeType === "30days") {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(now.getDate() - 30);
+      return date >= thirtyDaysAgo;
+    }
+
+    if (dateRangeType === "custom") {
+      if (customStartDate) {
+        const start = new Date(customStartDate);
+        if (date < start) return false;
+      }
+      if (customEndDate) {
+        const end = new Date(customEndDate + "T23:59:59");
+        if (date > end) return false;
+      }
+      return true;
+    }
+
+    return true;
+  };
+
   // Calculations: Real sales include both PAID and SHIPPED orders
-  const paidOrders = orders.filter((o) => o.status === "PAID" || o.status === "SHIPPED");
+  const filteredOrders = orders.filter((o) => filterByDateRange(o.createdAt));
+  const filteredCustomers = customers.filter((c) => filterByDateRange(c.createdAt));
+
+  const paidOrders = filteredOrders.filter((o) => o.status === "PAID" || o.status === "SHIPPED");
   const totalRevenue = paidOrders.reduce((sum, o) => sum + Number(o.totalAmount), 0);
   
-  const activeCustomerCount = customers.length;
+  const activeCustomerCount = filteredCustomers.length;
   
   // Real conversion rate: Unique customer accounts who purchased at least once / total customer audience
   const purchasingCustomerIds = new Set(
@@ -67,7 +114,7 @@ export function Overview() {
       ? ((purchasingCustomerIds.size / activeCustomerCount) * 100).toFixed(1)
       : "0.0";
 
-  const pendingVerificationCount = orders.filter(
+  const pendingVerificationCount = filteredOrders.filter(
     (o) => o.status === "PENDING_VERIFICATION"
   ).length;
 
@@ -121,6 +168,61 @@ export function Overview() {
             {language === "my" ? "အရောင်းစာရင်းနှင့် ဝင်ငွေအခြေအနေများကို ချက်ချင်းစစ်ဆေးပါ" : "Real-time analytical insights and revenue summary"}
           </p>
         </div>
+      </div>
+
+      {/* Date Range Selector Toolbar */}
+      <div 
+        className="glass-card" 
+        style={{ 
+          padding: "16px 24px", 
+          marginBottom: "24px", 
+          display: "flex", 
+          flexWrap: "wrap", 
+          alignItems: "center", 
+          justifyContent: "space-between", 
+          gap: "16px",
+          border: "1px solid rgba(255, 255, 255, 0.05)"
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <span style={{ fontSize: "14px", fontWeight: "600", color: "var(--text-secondary)" }}>
+            {language === "my" ? "ရက်စွဲအပိုင်းအခြား:" : "Date Filter:"}
+          </span>
+          <select
+            className="form-input"
+            style={{ width: "180px", padding: "8px 12px", fontSize: "13.5px", cursor: "pointer" }}
+            value={dateRangeType}
+            onChange={(e: any) => {
+              setDateRangeType(e.target.value);
+            }}
+          >
+            <option value="all">{language === "my" ? "စဖွင့်ချိန်မှစ၍" : "All Time"}</option>
+            <option value="today">{language === "my" ? "ယနေ့" : "Today"}</option>
+            <option value="7days">{language === "my" ? "လွန်ခဲ့သော ၇ ရက်" : "Last 7 Days"}</option>
+            <option value="30days">{language === "my" ? "လွန်ခဲ့သော ရက် ၃၀" : "Last 30 Days"}</option>
+            <option value="custom">{language === "my" ? "ရွေးချယ်ရန်..." : "Custom Range..."}</option>
+          </select>
+        </div>
+
+        {dateRangeType === "custom" && (
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+            <input
+              type="date"
+              className="form-input"
+              style={{ width: "150px", padding: "6px 12px", fontSize: "13px" }}
+              value={customStartDate}
+              onChange={(e) => setCustomStartDate(e.target.value)}
+            />
+            <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>to</span>
+            <input
+              type="date"
+              className="form-input"
+              style={{ width: "150px", padding: "6px 12px", fontSize: "13px" }}
+              value={customEndDate}
+              onChange={(e) => setCustomEndDate(e.target.value)}
+            />
+          </div>
+        )}
       </div>
 
       {/* Analytics Card Grids */}
