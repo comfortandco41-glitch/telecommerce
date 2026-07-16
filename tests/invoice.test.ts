@@ -25,22 +25,6 @@ jest.mock("../src/services/telegramClient", () => ({
   },
 }));
 
-// Mock Supabase storage
-jest.mock("@supabase/supabase-js", () => {
-  return {
-    createClient: jest.fn().mockReturnValue({
-      storage: {
-        from: jest.fn().mockReturnValue({
-          upload: jest.fn().mockResolvedValue({ data: { path: "invoice-path" }, error: null }),
-          getPublicUrl: jest.fn().mockReturnValue({
-            data: { publicUrl: "https://mock-supabase.co/invoice-123.pdf" },
-          }),
-        }),
-      },
-    }),
-  };
-});
-
 const prismaMock = prisma as any;
 const telegramClientMock = telegramClient as any;
 

@@ -30,4 +30,11 @@ export class MerchantRepository {
       },
     });
   }
+
+  async updatePassword(id: string, passwordHash: string): Promise<Merchant> {
+    return prisma.merchant.update({
+      where: { id },
+      data: { passwordHash },
+    });
+  }
 }
