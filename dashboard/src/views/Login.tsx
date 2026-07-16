@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bot, Zap, MessageSquare, Layers } from "lucide-react";
+import { Bot, Clock, MessageSquare, Layers } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 
 export function Login() {
@@ -82,7 +82,7 @@ export function Login() {
               
               <div className="feature-item">
                 <div className="feature-icon-wrapper">
-                  <Zap size={20} />
+                  <Clock size={20} />
                 </div>
                 <div className="feature-content">
                   <h3 className="feature-heading">{t("authShowcase.receiptTitle")}</h3>
