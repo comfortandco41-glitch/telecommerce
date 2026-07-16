@@ -22,7 +22,7 @@ services:
   - type: web
     name: superbot-dashboard
     env: static
-    buildCommand: npm install --legacy-peer-deps && npm run build --prefix dashboard
+    buildCommand: npm install --legacy-peer-deps --prefix dashboard && npm run build --prefix dashboard
     publishPath: dashboard/dist
     routes:
       # React Router client-side routing fallback rule
