@@ -28,6 +28,18 @@ const translations = {
       namePlaceholder: "e.g. John Doe",
       passwordPlaceholder: "At least 6 characters"
     },
+    authShowcase: {
+      tagline: "BUILD & GROW YOUR TELEGRAM SHOP",
+      headline: "The complete Telegram Shop Platform for your business",
+      botAutoTitle: "Telegram Bot Automation",
+      botAutoDesc: "Link your bot instantly with automated webhooks setup. Fully customized welcome interactions.",
+      receiptTitle: "Auto-Compress Receipts",
+      receiptDesc: "Accept payments with ease. Receipts are auto-resized and compressed to progressive JPEGs under 150KB.",
+      supportTitle: "Customer Support & FAQs",
+      supportDesc: "Direct chat channel with shoppers, backed by interactive FAQ automated menus to save your time.",
+      limitTitle: "Inventory & CSV Controls",
+      limitDesc: "Support up to 100 products per shop, dynamic date-based analytics, and simple CSV downloads."
+    },
     // Sidebar Navigation
     sidebar: {
       overview: "Overview",
@@ -173,6 +185,18 @@ const translations = {
       emailPlaceholder: "ဥပမာ- merchant@telecommerce.app",
       namePlaceholder: "ဥပမာ- မောင်မောင်",
       passwordPlaceholder: "အနည်းဆုံး ၆ လုံး"
+    },
+    authShowcase: {
+      tagline: "တယ်လီဂရမ်အရောင်းစနစ် တည်ဆောက်ပါ",
+      headline: "သင့်လုပ်ငန်းအတွက် ပြီးပြည့်စုံသော တယ်လီဂရမ်ဆိုင်စနစ်",
+      botAutoTitle: "အလိုအလျောက် တယ်လီဂရမ်ဘော့တ်စနစ်",
+      botAutoDesc: "တိုကင်တစ်ခုတည်းဖြင့် သင့်ဘော့တ်ကို ချက်ချင်းချိတ်ဆက်ပြီး ကြိုဆိုနှုတ်ခွန်းဆက်စာများ စိတ်ကြိုက်ပြင်ဆင်ပါ။",
+      receiptTitle: "ပြေစာပုံများ အလိုအလျောက်ချုံ့စနစ်",
+      receiptDesc: "လွှဲပြောင်းပြေစာပုံများကို စက္ကန့်ပိုင်းအတွင်း သေသပ်စွာချုံ့ပေးပြီး ဒေတာကုန်ကျစရိတ် သက်သာစေမည်။",
+      supportTitle: "ဖောက်သည်ပံ့ပိုးမှုနှင့် FAQ မီနူး",
+      supportDesc: "ဝယ်သူများနှင့် တိုက်ရိုက်စကားပြောနိုင်သည့်အပြင် အမေးများသောမေးခွန်းများကို ခလုတ်များဖြင့် ဖြေကြားပေးမည်။",
+      limitTitle: "ကုန်ပစ္စည်းစာရင်းနှင့် CSV ထုတ်ယူမှု",
+      limitDesc: "ဆိုင်တစ်ဆိုင်လျှင် ပစ္စည်း ၁၀၀ အထိ တင်နိုင်ပြီး အော်ဒါအရောင်းစာရင်းများကို CSV ဖိုင်ဖြင့် ထုတ်ယူနိုင်မည်။"
     },
     // Sidebar Navigation
     sidebar: {
