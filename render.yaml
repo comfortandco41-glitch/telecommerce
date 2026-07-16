@@ -9,6 +9,8 @@ services:
     envVars:
       - key: PORT
         value: 10000
+      - key: FRONTEND_URL
+        sync: false # Enter your frontend Render static site URL (e.g., https://telecommerce-1.onrender.com)
       - key: DATABASE_URL
         sync: false # You will enter your Supabase Connection Pooler URL during setup
       - key: JWT_SECRET
