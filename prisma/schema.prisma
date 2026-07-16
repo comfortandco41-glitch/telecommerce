@@ -53,6 +53,7 @@ model Shop {
   webhookLogs         WebhookLog[]
   workflows           Workflow[]
   supportMessages     SupportMessage[]
+  faqs                Json?
   createdAt           DateTime     @default(now())
   updatedAt           DateTime     @updatedAt
 }

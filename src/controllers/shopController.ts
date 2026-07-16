@@ -34,6 +34,15 @@ const shopSchema = z.object({
   currency: z.string().default("USD"),
   paymentInstructions: z.string().min(5),
   welcomeMessage: z.string().min(5),
+  faqs: z
+    .array(
+      z.object({
+        question: z.string().min(1),
+        answer: z.string().min(1),
+      })
+    )
+    .max(10)
+    .optional(),
 });
 
 export async function handleCreateShop(
@@ -57,7 +66,7 @@ export async function handleCreateShop(
       return next(new AppError("Only one shop is allowed per merchant account.", 400, "BAD_REQUEST"));
     }
 
-    const { botToken, name, currency, paymentInstructions, welcomeMessage } = parse.data;
+    const { botToken, name, currency, paymentInstructions, welcomeMessage, faqs } = parse.data;
 
     const existing = await shopRepo.getByToken(botToken);
     if (existing) {
@@ -72,6 +81,7 @@ export async function handleCreateShop(
         currency,
         paymentInstructions,
         welcomeMessage,
+        faqs: faqs || [],
       },
     });
 

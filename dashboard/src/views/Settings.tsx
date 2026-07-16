@@ -10,6 +10,7 @@ export function Settings() {
   const [currency, setCurrency] = useState("USD");
   const [paymentInstructions, setPaymentInstructions] = useState("");
   const [welcomeMessage, setWelcomeMessage] = useState("");
+  const [faqs, setFaqs] = useState<{ question: string; answer: string }[]>([]);
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -35,6 +36,7 @@ export function Settings() {
           setCurrency(currentShop.currency);
           setPaymentInstructions(currentShop.paymentInstructions);
           setWelcomeMessage(currentShop.welcomeMessage);
+          setFaqs(currentShop.faqs || []);
         }
       }
     } catch (err) {
@@ -52,6 +54,26 @@ export function Settings() {
       window.removeEventListener("shopChanged", fetchShopDetails);
     };
   }, [selectedShopId]);
+
+  const handleAddFaq = () => {
+    if (faqs.length >= 10) return;
+    setFaqs([...faqs, { question: "", answer: "" }]);
+  };
+
+  const handleRemoveFaq = (index: number) => {
+    const newFaqs = [...faqs];
+    newFaqs.splice(index, 1);
+    setFaqs(newFaqs);
+  };
+
+  const handleFaqChange = (index: number, field: "question" | "answer", val: string) => {
+    const newFaqs = [...faqs];
+    newFaqs[index] = {
+      ...newFaqs[index],
+      [field]: val,
+    };
+    setFaqs(newFaqs);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,6 +93,7 @@ export function Settings() {
           currency,
           paymentInstructions,
           welcomeMessage,
+          faqs,
         }),
       });
 
@@ -188,6 +211,93 @@ export function Settings() {
               placeholder="Display bank accounts, e-wallets (KBZPay, WavePay, etc.), and checkout terms."
               required
             />
+          </div>
+
+          <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "24px", marginTop: "12px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <div>
+                <h4 style={{ margin: 0, fontSize: "16px", fontWeight: "600" }}>Frequently Asked Questions (FAQs)</h4>
+                <p style={{ margin: "4px 0 0", fontSize: "12px", color: "var(--text-secondary)" }}>
+                  Add up to 10 frequently asked questions to help customers automatically in the bot chat (Myanmar & English translation recommended)
+                </p>
+              </div>
+              {faqs.length < 10 && (
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ padding: "6px 12px", fontSize: "12px" }}
+                  onClick={handleAddFaq}
+                >
+                  + Add FAQ
+                </button>
+              )}
+            </div>
+
+            {faqs.length === 0 ? (
+              <div style={{ padding: "20px", textAlign: "center", border: "1px dashed var(--border-color)", borderRadius: "8px", color: "var(--text-secondary)", fontSize: "13px" }}>
+                No FAQs configured yet. Click "+ Add FAQ" to configure automated responses.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {faqs.map((faq, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      padding: "16px",
+                      borderRadius: "8px",
+                      border: "1px solid var(--border-color)",
+                      backgroundColor: "rgba(255, 255, 255, 0.02)",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "12px",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--accent-color)" }}>FAQ #{idx + 1}</span>
+                      <button
+                        type="button"
+                        style={{
+                          backgroundColor: "transparent",
+                          border: "none",
+                          color: "var(--danger-color)",
+                          cursor: "pointer",
+                          fontSize: "12px",
+                          fontWeight: "500",
+                        }}
+                        onClick={() => handleRemoveFaq(idx)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ fontSize: "12px", marginBottom: "4px" }}>Question</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        style={{ padding: "8px 12px", fontSize: "13px" }}
+                        value={faq.question}
+                        onChange={(e) => handleFaqChange(idx, "question", e.target.value)}
+                        placeholder="e.g. How do I make a payment? / ငွေဘယ်လိုလွှဲရမလဲ?"
+                        required
+                      />
+                    </div>
+
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ fontSize: "12px", marginBottom: "4px" }}>Answer</label>
+                      <textarea
+                        className="form-input"
+                        style={{ padding: "8px 12px", fontSize: "13px", minHeight: "60px", fontFamily: "inherit" }}
+                        value={faq.answer}
+                        onChange={(e) => handleFaqChange(idx, "answer", e.target.value)}
+                        placeholder="e.g. You can transfer to KBZPay: 09123456789. / KBZPay ဖုန်း ၀၉၁၂၃၄၅၆၇၈၉ သို့ လွှဲနိုင်ပါသည်။"
+                        required
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: "12px", borderTop: "1px solid var(--border-color)" }}>

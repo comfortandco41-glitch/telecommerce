@@ -129,7 +129,14 @@ export class WebhookService {
     } else if (data === "edit_details") {
       await this.askForName(shop, customer, chatId);
     } else if (data === "customer_support") {
-      await this.handleCustomerSupportTrigger(shop, customer, chatId);
+      await this.handleCustomerSupportTrigger(shop, customer, chatId, messageId);
+    } else if (data === "support_talk_admin") {
+      await this.handleDirectAdminSupport(shop, customer, chatId, messageId);
+    } else if (data === "support_faq_list") {
+      await this.showFaqList(shop, chatId, messageId);
+    } else if (data.startsWith("faq_detail:")) {
+      const indexStr = data.substring(11);
+      await this.showFaqDetail(shop, chatId, messageId, indexStr);
     }
   }
 
@@ -571,14 +578,68 @@ export class WebhookService {
 
   private async handleCustomerSupportTrigger(
     shop: any,
-    customer: any,
-    chatId: string | number
+    _customer: any,
+    chatId: string | number,
+    messageId?: number
   ): Promise<void> {
     const text =
-      `💬 *Customer Support / လူကြီးမင်းတို့သိလိုသည်များကိုမေးမြန်းနိုင်ပါသည်*\n\n` +
+      `💬 *Customer Support / စုံစမ်းမေးမြန်းရန်*\n\n` +
+      `🇬🇧 Welcome to Support\\! Please choose an option below:\n` +
+      `🇲🇲 အောက်ပါရွေးချယ်စရာများထဲမှ တစ်ခုကို ရွေးချယ်ပေးပါရန်:`;
+
+    const replyMarkup = {
+      inline_keyboard: [
+        [
+          {
+            text: "💬 Talk to Admin / အက်ဒမင်နှင့်တိုက်ရိုက်စကားပြောရန်",
+            callback_data: "support_talk_admin",
+          },
+        ],
+        [
+          {
+            text: "❓ FAQ / အမေးများသောမေးခွန်းများ",
+            callback_data: "support_faq_list",
+          },
+        ],
+        [
+          {
+            text: "🛍️ Main Menu / ပင်မမီနူးသို့",
+            callback_data: "back_categories",
+          },
+        ],
+      ],
+    };
+
+    if (messageId) {
+      await telegramClient.editMessageText(shop.botToken, chatId, messageId, text, replyMarkup);
+    } else {
+      await telegramClient.sendMessage(shop.botToken, chatId, text, replyMarkup);
+    }
+  }
+
+  private async handleDirectAdminSupport(
+    shop: any,
+    customer: any,
+    chatId: string | number,
+    messageId: number
+  ): Promise<void> {
+    const text =
+      `💬 *Talk to Admin / အက်ဒမင်နှင့်တိုက်ရိုက်စကားပြောရန်*\n\n` +
       `🇬🇧 Please type your message here in the chat\\. Our team will get back to you shortly\\!\n` +
       `🇲🇲 မေးခွန်းများကို ဤနေရာတွင် တိုက်ရိုက်ရိုက်နှိပ်မေးမြန်းနိုင်ပါသည်။ အက်ဒမင်မှ မကြာမီ ပြန်လည်ဖြေကြားပေးပါမည်။`;
-    await telegramClient.sendMessage(shop.botToken, chatId, text);
+    
+    const replyMarkup = {
+      inline_keyboard: [
+        [
+          {
+            text: "⬅️ Back / နောက်သို့",
+            callback_data: "customer_support",
+          },
+        ],
+      ],
+    };
+
+    await telegramClient.editMessageText(shop.botToken, chatId, messageId, text, replyMarkup);
 
     // Write a system alert to the database to populate the dashboard chat list
     await prisma.supportMessage.create({
@@ -586,9 +647,80 @@ export class WebhookService {
         shopId: shop.id,
         customerId: customer.id,
         sender: "CUSTOMER",
-        text: "⚡ [System Alert: Customer clicked 'Customer Support' button / စုံစမ်းမေးမြန်းရန် ခလုတ်ကို နှိပ်လိုက်ပါသည်]",
+        text: "⚡ [System Alert: Customer clicked 'Talk to Admin' / အက်ဒမင်နှင့်စကားပြောရန် ခလုတ်ကို နှိပ်လိုက်ပါသည်]",
       },
     });
+  }
+
+  private async showFaqList(
+    shop: any,
+    chatId: string | number,
+    messageId: number
+  ): Promise<void> {
+    const faqs = (shop.faqs as any[]) || [];
+
+    let text = `❓ *FAQs / အမေးများသောမေးခွန်းများ*\n\n`;
+    if (faqs.length === 0) {
+      text += `🇬🇧 No FAQs have been set up by the shop owner yet\\.\n`;
+      text += `🇲🇲 ဆိုင်ရှင်မှ အမေးများသောမေးခွန်းများ မထည့်သွင်းရသေးပါ။`;
+    } else {
+      text += `🇬🇧 Select a question to view details:\n`;
+      text += `🇲🇲 အသေးစိတ်ကြည့်ရှုရန် မေးခွန်းတစ်ခုကို ရွေးချယ်ပေးပါရန်:`;
+    }
+
+    const inlineKeyboard: any[] = [];
+    faqs.forEach((faq, idx) => {
+      inlineKeyboard.push([
+        {
+          text: `${idx + 1}. ${faq.question}`.substring(0, 40),
+          callback_data: `faq_detail:${idx}`,
+        },
+      ]);
+    });
+
+    inlineKeyboard.push([
+      {
+        text: "⬅️ Back / နောက်သို့",
+        callback_data: "customer_support",
+      },
+    ]);
+
+    await telegramClient.editMessageText(shop.botToken, chatId, messageId, text, {
+      inline_keyboard: inlineKeyboard,
+    });
+  }
+
+  private async showFaqDetail(
+    shop: any,
+    chatId: string | number,
+    messageId: number,
+    indexStr: string
+  ): Promise<void> {
+    const idx = parseInt(indexStr, 10);
+    const faqs = (shop.faqs as any[]) || [];
+    const faq = faqs[idx];
+
+    if (!faq) {
+      await telegramClient.sendMessage(shop.botToken, chatId, escapeMarkdownV2("FAQ item not found."));
+      return;
+    }
+
+    const text =
+      `*Q: ${escapeMarkdownV2(faq.question)}*\n\n` +
+      `*A:* ${escapeMarkdownV2(faq.answer)}`;
+
+    const replyMarkup = {
+      inline_keyboard: [
+        [
+          {
+            text: "⬅️ Back to FAQs / နောက်သို့",
+            callback_data: "support_faq_list",
+          },
+        ],
+      ],
+    };
+
+    await telegramClient.editMessageText(shop.botToken, chatId, messageId, text, replyMarkup);
   }
 
   private async showCategoryProducts(
