@@ -7,10 +7,12 @@ export function Login() {
   const navigate = useNavigate();
   const { language, setLanguage, t } = useLanguage();
   const [isRegister, setIsRegister] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:10000";
@@ -18,7 +20,30 @@ export function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccessMsg("");
     setLoading(true);
+
+    if (isForgotPassword) {
+      try {
+        const res = await fetch(`${API_URL}/api/v1/auth/forgot-password`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json.error?.message || json.message || "Failed to process request");
+        }
+
+        setSuccessMsg(json.message || "Instructions sent to your email.");
+      } catch (err: any) {
+        setError(err.message || "Failed to connect to server");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
     if (isRegister) {
       try {
@@ -190,16 +215,37 @@ export function Login() {
               </div>
             )}
 
+            {successMsg && (
+              <div
+                style={{
+                  backgroundColor: "rgba(16, 185, 129, 0.1)",
+                  border: "1px solid rgba(16, 185, 129, 0.3)",
+                  color: "#10B981",
+                  borderRadius: "8px",
+                  padding: "10px 14px",
+                  fontSize: "13px",
+                  marginBottom: "18px",
+                  textAlign: "center",
+                }}
+              >
+                {successMsg}
+              </div>
+            )}
+
             <div className="auth-header" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
               <img src="/logo.png" alt="Tele-Commerce Logo" style={{ width: "64px", height: "64px", objectFit: "contain", marginBottom: "16px" }} />
               <h2 className="auth-title" style={{ margin: "0 0 4px" }}>{t("brandName")}</h2>
               <p className="auth-subtitle">
-                {isRegister ? t("auth.registerTitle") : t("auth.loginTitle")}
+                {isForgotPassword
+                  ? t("auth.forgotPasswordTitle")
+                  : isRegister
+                  ? t("auth.registerTitle")
+                  : t("auth.loginTitle")}
               </p>
             </div>
 
             <form onSubmit={handleSubmit}>
-              {isRegister && (
+              {isRegister && !isForgotPassword && (
                 <div className="form-group">
                   <label className="form-label">{t("auth.name")}</label>
                   <input
@@ -225,21 +271,39 @@ export function Login() {
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label">{t("auth.password")}</label>
-                <input
-                  type="password"
-                  className="form-input"
-                  placeholder={t("auth.passwordPlaceholder")}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
+              {!isForgotPassword && (
+                <div className="form-group">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                    <label className="form-label" style={{ margin: 0 }}>{t("auth.password")}</label>
+                    {!isRegister && (
+                      <span
+                        style={{ color: "var(--accent-color)", cursor: "pointer", fontSize: "12px", fontWeight: "500" }}
+                        onClick={() => {
+                          setIsForgotPassword(true);
+                          setError("");
+                          setSuccessMsg("");
+                        }}
+                      >
+                        {t("auth.forgotPassword")}
+                      </span>
+                    )}
+                  </div>
+                  <input
+                    type="password"
+                    className="form-input"
+                    placeholder={t("auth.passwordPlaceholder")}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
 
               <button type="submit" className="btn btn-primary" style={{ width: "100%", marginTop: "12px" }} disabled={loading}>
                 {loading
-                  ? t(isRegister ? "auth.registering" : "auth.signingIn")
+                  ? t(isForgotPassword ? "auth.sendingReset" : isRegister ? "auth.registering" : "auth.signingIn")
+                  : isForgotPassword
+                  ? t("auth.sendResetBtn")
                   : isRegister
                   ? t("auth.registerBtn")
                   : t("auth.loginBtn")}
@@ -247,16 +311,56 @@ export function Login() {
             </form>
 
             <div style={{ textAlign: "center", marginTop: "20px", fontSize: "13px", color: "var(--text-secondary)" }}>
-              {isRegister ? t("auth.alreadyHaveAccount") : t("auth.newToBrand")}{" "}
-              <span
-                style={{ color: "var(--accent-color)", cursor: "pointer", fontWeight: "600" }}
-                onClick={() => {
-                  setIsRegister(!isRegister);
-                  setError("");
-                }}
-              >
-                {isRegister ? t("auth.loginBtn") : t("auth.registerBtn")}
-              </span>
+              {isForgotPassword ? (
+                <span
+                  style={{ color: "var(--accent-color)", cursor: "pointer", fontWeight: "600" }}
+                  onClick={() => {
+                    setIsForgotPassword(false);
+                    setError("");
+                    setSuccessMsg("");
+                  }}
+                >
+                  ← {t("auth.backToLogin")}
+                </span>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px", alignItems: "center" }}>
+                  <div>
+                    {isRegister ? t("auth.alreadyHaveAccount") : t("auth.newToBrand")}{" "}
+                    <span
+                      style={{ color: "var(--accent-color)", cursor: "pointer", fontWeight: "600" }}
+                      onClick={() => {
+                        setIsRegister(!isRegister);
+                        setIsForgotPassword(false);
+                        setError("");
+                        setSuccessMsg("");
+                      }}
+                    >
+                      {isRegister ? t("auth.loginBtn") : t("auth.registerBtn")}
+                    </span>
+                  </div>
+
+                  {!isRegister && (
+                    <div>
+                      <span
+                        style={{
+                          color: "var(--accent-color)",
+                          cursor: "pointer",
+                          fontWeight: "500",
+                          fontSize: "13px",
+                          textDecoration: "underline",
+                        }}
+                        onClick={() => {
+                          setIsForgotPassword(true);
+                          setError("");
+                          setSuccessMsg("");
+                        }}
+                      >
+                        🔑 {t("auth.forgotPassword")}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
           </div>

@@ -37,4 +37,35 @@ export class MerchantRepository {
       data: { passwordHash },
     });
   }
+
+  async setResetToken(
+    email: string,
+    resetToken: string,
+    resetTokenExpiresAt: Date
+  ): Promise<Merchant | null> {
+    return prisma.merchant.update({
+      where: { email },
+      data: { resetToken, resetTokenExpiresAt },
+    });
+  }
+
+  async getByResetToken(resetToken: string): Promise<Merchant | null> {
+    return prisma.merchant.findFirst({
+      where: { resetToken },
+    });
+  }
+
+  async updatePasswordAndClearToken(
+    id: string,
+    passwordHash: string
+  ): Promise<Merchant> {
+    return prisma.merchant.update({
+      where: { id },
+      data: {
+        passwordHash,
+        resetToken: null,
+        resetTokenExpiresAt: null,
+      },
+    });
+  }
 }

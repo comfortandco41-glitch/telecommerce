@@ -1,6 +1,7 @@
 import React from "react";
 import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Login } from "./views/Login";
+import { ResetPassword } from "./views/ResetPassword";
 import { DashboardLayout } from "./views/DashboardLayout";
 import { Overview } from "./views/Overview";
 import { OrdersManager } from "./views/OrdersManager";
@@ -26,6 +27,7 @@ export default function App() {
       <HashRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           
           <Route
             path="/"

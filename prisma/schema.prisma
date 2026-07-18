@@ -26,6 +26,8 @@ model Merchant {
   id                    String   @id @default(uuid())
   email                 String   @unique
   passwordHash          String
+  resetToken            String?
+  resetTokenExpiresAt   DateTime?
   name                  String
   subscriptionStatus    String   @default("TRIAL")
   subscriptionExpiresAt DateTime?

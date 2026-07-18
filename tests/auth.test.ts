@@ -115,4 +115,84 @@ describe("Merchant Authentication API", () => {
       expect(response.body.success).toBe(false);
     });
   });
+
+  describe("POST /api/v1/auth/forgot-password", () => {
+    it("should process forgot password request and return generic success message", async () => {
+      prismaMock.merchant.findUnique.mockResolvedValue({ id: merchantId, email });
+      prismaMock.merchant.update.mockResolvedValue({ id: merchantId, email });
+
+      const response = await request(app)
+        .post("/api/v1/auth/forgot-password")
+        .send({ email });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(response.body.message).toContain("instructions have been sent");
+    });
+
+    it("should return generic message even if email does not exist", async () => {
+      prismaMock.merchant.findUnique.mockResolvedValue(null);
+
+      const response = await request(app)
+        .post("/api/v1/auth/forgot-password")
+        .send({ email: "nonexistent@test.com" });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+    });
+  });
+
+  describe("POST /api/v1/auth/reset-password", () => {
+    it("should successfully reset password with valid token", async () => {
+      const validToken = "valid-reset-token-123";
+      const futureDate = new Date(Date.now() + 3600000);
+
+      prismaMock.merchant.findFirst.mockResolvedValue({
+        id: merchantId,
+        email,
+        resetToken: validToken,
+        resetTokenExpiresAt: futureDate,
+      });
+      prismaMock.merchant.update.mockResolvedValue({ id: merchantId });
+
+      const response = await request(app)
+        .post("/api/v1/auth/reset-password")
+        .send({ token: validToken, newPassword: "newsecurepassword123" });
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(prismaMock.merchant.update).toHaveBeenCalledTimes(1);
+    });
+
+    it("should reject password reset when token is expired", async () => {
+      const expiredToken = "expired-reset-token-123";
+      const pastDate = new Date(Date.now() - 3600000);
+
+      prismaMock.merchant.findFirst.mockResolvedValue({
+        id: merchantId,
+        email,
+        resetToken: expiredToken,
+        resetTokenExpiresAt: pastDate,
+      });
+
+      const response = await request(app)
+        .post("/api/v1/auth/reset-password")
+        .send({ token: expiredToken, newPassword: "newsecurepassword123" });
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+      expect(response.body.error.code).toBe("EXPIRED_TOKEN");
+    });
+
+    it("should reject password reset when token is invalid/not found", async () => {
+      prismaMock.merchant.findFirst.mockResolvedValue(null);
+
+      const response = await request(app)
+        .post("/api/v1/auth/reset-password")
+        .send({ token: "invalid-token", newPassword: "newsecurepassword123" });
+
+      expect(response.status).toBe(400);
+      expect(response.body.success).toBe(false);
+    });
+  });
 });
