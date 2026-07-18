@@ -323,42 +323,19 @@ export function Login() {
                   ← {t("auth.backToLogin")}
                 </span>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px", alignItems: "center" }}>
-                  <div>
-                    {isRegister ? t("auth.alreadyHaveAccount") : t("auth.newToBrand")}{" "}
-                    <span
-                      style={{ color: "var(--accent-color)", cursor: "pointer", fontWeight: "600" }}
-                      onClick={() => {
-                        setIsRegister(!isRegister);
-                        setIsForgotPassword(false);
-                        setError("");
-                        setSuccessMsg("");
-                      }}
-                    >
-                      {isRegister ? t("auth.loginBtn") : t("auth.registerBtn")}
-                    </span>
-                  </div>
-
-                  {!isRegister && (
-                    <div>
-                      <span
-                        style={{
-                          color: "var(--accent-color)",
-                          cursor: "pointer",
-                          fontWeight: "500",
-                          fontSize: "13px",
-                          textDecoration: "underline",
-                        }}
-                        onClick={() => {
-                          setIsForgotPassword(true);
-                          setError("");
-                          setSuccessMsg("");
-                        }}
-                      >
-                        🔑 {t("auth.forgotPassword")}
-                      </span>
-                    </div>
-                  )}
+                <div>
+                  {isRegister ? t("auth.alreadyHaveAccount") : t("auth.newToBrand")}{" "}
+                  <span
+                    style={{ color: "var(--accent-color)", cursor: "pointer", fontWeight: "600" }}
+                    onClick={() => {
+                      setIsRegister(!isRegister);
+                      setIsForgotPassword(false);
+                      setError("");
+                      setSuccessMsg("");
+                    }}
+                  >
+                    {isRegister ? t("auth.loginBtn") : t("auth.registerBtn")}
+                  </span>
                 </div>
               )}
             </div>
