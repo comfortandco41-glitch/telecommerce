@@ -167,6 +167,7 @@ export async function handleForgotPassword(
       message: "If an account with that email exists, password reset instructions have been sent.",
     });
   } catch (err) {
+    console.error("[AUTH] Error in handleForgotPassword:", err);
     next(err);
   }
 }

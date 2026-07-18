@@ -4,13 +4,16 @@
   "description": "Tele-Commerce Multi-Tenant Telegram Shop SaaS Backend",
   "main": "dist/src/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "prisma generate && prisma db push && tsc",
     "build:frontend": "npm run build --prefix dashboard",
     "start": "node dist/src/index.js",
     "dev": "nodemon src/index.ts",
     "dev:frontend": "npm run dev --prefix dashboard",
     "setup-webhook": "ts-node scripts/setup-webhook.ts",
     "test": "jest --runInBand --detectOpenHandles"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "dependencies": {
     "@prisma/client": "^5.16.1",
