@@ -55,4 +55,28 @@ export class BroadcastRepository {
       },
     });
   }
+
+  async countMonthlyBroadcastsByShop(shopId: string): Promise<number> {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const shop = await prisma.shop.findUnique({
+      where: { id: shopId },
+      select: { merchantId: true },
+    });
+
+    if (!shop) return 0;
+
+    return prisma.broadcast.count({
+      where: {
+        shop: {
+          merchantId: shop.merchantId,
+        },
+        createdAt: {
+          gte: startOfMonth,
+        },
+      },
+    });
+  }
 }

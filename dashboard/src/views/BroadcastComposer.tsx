@@ -7,6 +7,7 @@ export function BroadcastComposer() {
 
   const [broadcasts, setBroadcasts] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
+  const [monthlyUsed, setMonthlyUsed] = useState<number>(0);
   const [loading, setLoading] = useState(true);
 
   // Form states
@@ -36,6 +37,9 @@ export function BroadcastComposer() {
       });
       const listJson = await listRes.json();
       setBroadcasts(listJson.success ? listJson.data : []);
+      if (listJson.meta && typeof listJson.meta.monthlyUsed === "number") {
+        setMonthlyUsed(listJson.meta.monthlyUsed);
+      }
 
       // 2. Fetch audience customer list
       const custRes = await fetch(`${API_URL}/api/v1/shops/${selectedShopId}/customers`, {
@@ -63,6 +67,11 @@ export function BroadcastComposer() {
     e.preventDefault();
     setError("");
     setSuccess("");
+
+    if (monthlyUsed >= 15) {
+      setError("Monthly limit reached (15/15 campaigns used). Reset on 1st of next month.");
+      return;
+    }
 
     if (messageText.trim().length < 5) {
       setError("Broadcast message must be at least 5 characters long.");
@@ -186,6 +195,35 @@ export function BroadcastComposer() {
       <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
         <h3 style={{ margin: "4px 0 0", fontSize: "18px", fontWeight: "700" }}>Campaign Composer</h3>
 
+        {/* Monthly Quota Badge */}
+        <div
+          className="glass-card"
+          style={{
+            padding: "14px 18px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            border: monthlyUsed >= 15 ? "1px solid rgba(239, 68, 68, 0.4)" : "1px solid var(--border-color)",
+            backgroundColor: monthlyUsed >= 15 ? "rgba(239, 68, 68, 0.08)" : "transparent",
+          }}
+        >
+          <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--text-secondary)" }}>
+            📢 Monthly Quota
+          </span>
+          <span
+            className={monthlyUsed >= 15 ? "badge badge-danger" : "badge badge-paid"}
+            style={{
+              fontSize: "12px",
+              fontWeight: "700",
+              padding: "4px 10px",
+              backgroundColor: monthlyUsed >= 15 ? "#EF4444" : undefined,
+              color: monthlyUsed >= 15 ? "#fff" : undefined,
+            }}
+          >
+            {monthlyUsed} / 15 Used
+          </span>
+        </div>
+
         {/* Audience size card */}
         <div
           className="glass-card"
@@ -209,6 +247,11 @@ export function BroadcastComposer() {
 
         {/* Form composer card */}
         <div className="glass-card">
+          {monthlyUsed >= 15 && (
+            <div style={{ padding: "12px", color: "#EAB308", background: "rgba(234, 179, 8, 0.1)", border: "1px solid rgba(234, 179, 8, 0.3)", borderRadius: "8px", fontSize: "13px", marginBottom: "16px" }}>
+              ⚠️ <strong>Monthly Limit Reached (15/15):</strong> You have reached the maximum broadcast campaigns allowed per month. Your quota will reset on the 1st of next month.
+            </div>
+          )}
           {error && (
             <div style={{ padding: "10px", color: "var(--danger-color)", background: "var(--danger-bg)", border: "1px solid var(--danger-border)", borderRadius: "8px", fontSize: "13px", marginBottom: "16px" }}>
               {error}
@@ -228,6 +271,7 @@ export function BroadcastComposer() {
                 value={targetAudience}
                 onChange={(e: any) => setTargetAudience(e.target.value)}
                 style={{ cursor: "pointer" }}
+                disabled={monthlyUsed >= 15}
               >
                 <option value="ALL">All Bot Subscribers ({customers.length})</option>
                 <option value="BUYERS">Previous Buyers Only ({buyersCount})</option>
@@ -242,6 +286,7 @@ export function BroadcastComposer() {
                 placeholder="Write message details (supports raw text / links)..."
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
+                disabled={monthlyUsed >= 15}
                 required
               />
             </div>
@@ -254,6 +299,7 @@ export function BroadcastComposer() {
                 placeholder="https://images.unsplash.com/photo-..."
                 value={mediaUrl}
                 onChange={(e) => setMediaUrl(e.target.value)}
+                disabled={monthlyUsed >= 15}
               />
             </div>
 
@@ -267,6 +313,7 @@ export function BroadcastComposer() {
                   style={{ width: "100%", paddingLeft: "36px" }}
                   value={scheduledAt}
                   onChange={(e) => setScheduledAt(e.target.value)}
+                  disabled={monthlyUsed >= 15}
                 />
               </div>
               <span style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px", display: "block" }}>
@@ -278,10 +325,18 @@ export function BroadcastComposer() {
               type="submit"
               className="btn btn-primary flex-gap-12"
               style={{ width: "100%", marginTop: "12px" }}
-              disabled={sendLoading}
+              disabled={sendLoading || monthlyUsed >= 15}
             >
               <Send size={14} />
-              <span>{sendLoading ? "Queuing..." : "Queue Broadcast"}</span>
+              <span>
+                {sendLoading
+                  ? "Dispatching..."
+                  : monthlyUsed >= 15
+                  ? "Monthly Limit Reached (15/15)"
+                  : scheduledAt
+                  ? "Schedule Campaign"
+                  : "Dispatch Broadcast"}
+              </span>
             </button>
           </form>
         </div>

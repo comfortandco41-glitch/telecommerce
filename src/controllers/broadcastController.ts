@@ -23,9 +23,14 @@ export async function handleGetBroadcasts(
   const { shopId } = req.params;
   try {
     const list = await broadcastRepo.listByShopId(shopId);
+    const monthlyUsed = await broadcastRepo.countMonthlyBroadcastsByShop(shopId);
     res.status(200).json({
       success: true,
       data: list,
+      meta: {
+        monthlyUsed,
+        monthlyLimit: 15,
+      },
     });
   } catch (err) {
     next(err);
@@ -42,6 +47,17 @@ export async function handleCreateBroadcast(
     const parse = createBroadcastSchema.safeParse(req.body);
     if (!parse.success) {
       return next(new AppError("Invalid input fields", 400, "BAD_REQUEST", parse.error.format()));
+    }
+
+    const monthlyUsed = await broadcastRepo.countMonthlyBroadcastsByShop(shopId);
+    if (monthlyUsed >= 15) {
+      return next(
+        new AppError(
+          "Monthly broadcast limit reached (maximum 15 broadcast campaigns per month per account).",
+          400,
+          "BROADCAST_LIMIT_REACHED"
+        )
+      );
     }
 
     const { messageText, mediaUrl, targetAudience, scheduledAt } = parse.data;
@@ -64,6 +80,10 @@ export async function handleCreateBroadcast(
     res.status(201).json({
       success: true,
       data: broadcast,
+      meta: {
+        monthlyUsed: monthlyUsed + 1,
+        monthlyLimit: 15,
+      },
     });
   } catch (err) {
     next(err);
