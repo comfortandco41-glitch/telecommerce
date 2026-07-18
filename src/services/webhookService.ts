@@ -24,9 +24,22 @@ export class WebhookService {
     try {
       console.log(`Processing update ${updateId} in background for shop ${shopId}...`);
 
-      const shop = await this.shopRepo.getById(shopId);
+      const shop = await this.shopRepo.getByIdWithMerchant(shopId);
       if (!shop) {
         throw new Error(`Shop with ID ${shopId} not found in database.`);
+      }
+
+      if (shop.merchant) {
+        const isExpiredByDate = shop.merchant.subscriptionExpiresAt
+          ? new Date(shop.merchant.subscriptionExpiresAt) < new Date()
+          : false;
+        const isExpiredByStatus = shop.merchant.subscriptionStatus === "EXPIRED";
+
+        if (isExpiredByDate || isExpiredByStatus) {
+          console.warn(`[WEBHOOK SERVICE BLOCKED] Bot update ${updateId} skipped for shop ${shopId} - merchant ${shop.merchant.email} subscription is expired.`);
+          await this.webhookRepo.markProcessed(updateId, true);
+          return;
+        }
       }
 
       const tgUser = payload.message ? payload.message.from : payload.callback_query?.from;

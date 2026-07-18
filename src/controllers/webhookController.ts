@@ -38,9 +38,13 @@ export class WebhookController {
       }
 
       // Check if merchant subscription is expired
-      if (shop.merchant && shop.merchant.subscriptionExpiresAt) {
-        const isExpired = new Date(shop.merchant.subscriptionExpiresAt) < new Date();
-        if (isExpired || shop.merchant.subscriptionStatus === "EXPIRED") {
+      if (shop.merchant) {
+        const isExpiredByDate = shop.merchant.subscriptionExpiresAt
+          ? new Date(shop.merchant.subscriptionExpiresAt) < new Date()
+          : false;
+        const isExpiredByStatus = shop.merchant.subscriptionStatus === "EXPIRED";
+
+        if (isExpiredByDate || isExpiredByStatus) {
           console.warn(`[WEBHOOK BLOCKED] Shop ${shopId} bot is paused because merchant ${shop.merchant.email} subscription has expired.`);
           res.status(200).json({
             success: false,
