@@ -6,8 +6,9 @@ export async function sendPasswordResetEmail(
   toEmail: string,
   resetToken: string
 ): Promise<void> {
-  const frontendUrl = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
-  const resetUrl = `${frontendUrl}/#/reset-password?token=${resetToken}`;
+  const rawFrontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  const primaryUrl = rawFrontendUrl.split(",")[0].trim().replace(/\/$/, "");
+  const resetUrl = `${primaryUrl}/#/reset-password?token=${resetToken}`;
 
   console.log(`[EMAIL SERVICE] Password reset link generated for ${toEmail}:`);
   console.log(` -> Reset Link: ${resetUrl}`);
