@@ -1,14 +1,25 @@
 import React, { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 import { CheckCircle } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
 
 export function ResetPassword() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { tokenParam } = useParams();
   const { language, setLanguage, t } = useLanguage();
 
-  const token = searchParams.get("token") || "";
+  const getTokenFromUrl = (): string => {
+    if (tokenParam) return tokenParam;
+    const fromSearch = searchParams.get("token");
+    if (fromSearch) return fromSearch;
+
+    // Fallback: regex search anywhere in window.location.href or hash
+    const match = window.location.href.match(/token=([a-zA-Z0-9_-]+)/);
+    return match ? match[1] : "";
+  };
+
+  const token = getTokenFromUrl();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
