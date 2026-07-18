@@ -96,15 +96,15 @@ describe("Phase 5 - Payment Approval & PDF Invoice Dispatch Pipeline", () => {
     const invoiceService = new InvoiceService();
     await invoiceService.generateAndSendInvoice(shopId, orderId);
 
-    // Assert that the storage compiler uploaded the PDF file
+    // Assert that the storage compiler uploaded the .txt file
     const uploadMock = supabase.storage.from("invoices").upload as jest.Mock;
     expect(uploadMock).toHaveBeenCalledWith(
-      expect.stringContaining(`${shopId}/invoices/${orderId}-invoice.pdf`),
+      expect.stringContaining(`${shopId}/invoices/${orderId}-invoice.txt`),
       expect.any(Buffer),
-      expect.objectContaining({ contentType: "application/pdf" })
+      expect.objectContaining({ contentType: "text/plain; charset=utf-8" })
     );
 
-    // Assert that the order is updated with the PDF link in database
+    // Assert that the order is updated with the invoice link in database
     expect(prismaMock.order.update).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: orderId },
@@ -119,7 +119,7 @@ describe("Phase 5 - Payment Approval & PDF Invoice Dispatch Pipeline", () => {
       botToken,
       "8877",
       "https://mock-supabase.co/invoice-123.pdf",
-      expect.stringContaining("Invoice-")
+      expect.stringMatching(/Invoice-.*\.txt$/)
     );
   });
 });

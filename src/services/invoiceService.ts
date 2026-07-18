@@ -1,6 +1,3 @@
-import handlebars from "handlebars";
-import fs from "fs";
-import path from "path";
 import { supabase } from "../db/supabaseClient";
 import { telegramClient } from "./telegramClient";
 import { prisma } from "../db/client";
@@ -8,7 +5,7 @@ import { prisma } from "../db/client";
 export class InvoiceService {
   async generateAndSendInvoice(shopId: string, orderId: string): Promise<void> {
     try {
-      console.log(`Generating invoice for order ${orderId}...`);
+      console.log(`Generating text (.txt) invoice for order ${orderId}...`);
 
       // 1. Fetch deep order details
       const order = await prisma.order.findFirst({
@@ -24,61 +21,47 @@ export class InvoiceService {
         throw new Error(`Order with ID ${orderId} not found`);
       }
 
-      // 2. Compile HTML content from Handlebars template
-      const templatePath = path.join(__dirname, "../resources/invoiceTemplate.html");
-      let htmlContent = "";
+      const currency = order.shop.currency || "MMK";
+      const customerName = order.customer
+        ? `${order.customer.firstName} ${order.customer.lastName || ""}`.trim()
+        : "Valued Customer";
+      const issueDate = new Date(order.createdAt).toLocaleString();
 
-      if (fs.existsSync(templatePath)) {
-        const templateSource = fs.readFileSync(templatePath, "utf-8");
-        const template = handlebars.compile(templateSource);
+      // 2. Build clean, human-readable text invoice content
+      let txtContent = `==================================================\n`;
+      txtContent += `                 OFFICIAL INVOICE                 \n`;
+      txtContent += `==================================================\n`;
+      txtContent += `Store Name   : ${order.shop.name}\n`;
+      txtContent += `Invoice ID   : ${order.id}\n`;
+      txtContent += `Date         : ${issueDate}\n`;
+      txtContent += `Customer     : ${customerName}\n`;
+      txtContent += `Phone        : ${order.deliveryPhone || "N/A"}\n`;
+      txtContent += `Address      : ${order.deliveryAddress || "N/A"}\n`;
+      txtContent += `--------------------------------------------------\n`;
+      txtContent += `ITEMS PURCHASED:\n`;
+      txtContent += `--------------------------------------------------\n`;
 
-        const itemsData = order.items.map((item) => ({
-          productName: item.product.name,
-          quantity: item.quantity,
-          unitPrice: Number(item.priceAtPurchase).toFixed(2),
-          totalPrice: (Number(item.priceAtPurchase) * item.quantity).toFixed(2),
-        }));
+      order.items.forEach((item, index) => {
+        const unitPrice = Number(item.priceAtPurchase).toLocaleString();
+        const lineTotal = (Number(item.priceAtPurchase) * item.quantity).toLocaleString();
+        txtContent += `${index + 1}. ${item.product.name}\n`;
+        txtContent += `   Qty: ${item.quantity} x ${unitPrice} ${currency} = ${lineTotal} ${currency}\n`;
+      });
 
-        htmlContent = template({
-          orderId: order.id,
-          shopName: order.shop.name,
-          customerName: order.customer
-            ? `${order.customer.firstName} ${order.customer.lastName || ""}`.trim()
-            : "Valued Customer",
-          deliveryPhone: order.deliveryPhone,
-          deliveryAddress: order.deliveryAddress,
-          items: itemsData,
-          totalAmount: Number(order.totalAmount).toFixed(2),
-          issueDate: new Date(order.createdAt).toLocaleDateString(),
-        });
-      } else {
-        htmlContent = `<h1>Invoice for Order #${order.id}</h1><p>Total: $${Number(order.totalAmount).toFixed(2)}</p>`;
-      }
+      txtContent += `--------------------------------------------------\n`;
+      txtContent += `TOTAL AMOUNT : ${Number(order.totalAmount).toLocaleString()} ${currency}\n`;
+      txtContent += `PAYMENT      : VERIFIED & CONFIRMED\n`;
+      txtContent += `STATUS       : PAID\n`;
+      txtContent += `==================================================\n`;
+      txtContent += `Thank you for shopping with ${order.shop.name}!\n`;
+      txtContent += `==================================================\n`;
 
-      // 3. Compile PDF buffer (fallback to mock buffer if chromium download was skipped)
-      let pdfBuffer: Buffer;
-      if (
-        process.env.PUPPETEER_SKIP_CHROMIUM_DOWNLOAD === "true" ||
-        process.env.NODE_ENV === "test"
-      ) {
-        console.log("Puppeteer Chromium download skipped. Using mock PDF compiler buffer.");
-        pdfBuffer = Buffer.from(htmlContent);
-      } else {
-        const puppeteer = require("puppeteer");
-        const browser = await puppeteer.launch({
-          headless: true,
-          args: ["--no-sandbox", "--disable-setuid-sandbox"],
-        });
-        const page = await browser.newPage();
-        await page.setContent(htmlContent, { waitUntil: "domcontentloaded" });
-        pdfBuffer = Buffer.from(await page.pdf({ format: "A4", printBackground: true }));
-        await browser.close();
-      }
+      const txtBuffer = Buffer.from(txtContent, "utf-8");
 
-      // 4. Upload PDF invoice buffer to Supabase Storage invoices bucket
-      const storagePath = `${shopId}/invoices/${orderId}-invoice.pdf`;
-      const { error } = await supabase.storage.from("invoices").upload(storagePath, pdfBuffer, {
-        contentType: "application/pdf",
+      // 3. Upload .txt invoice buffer to Supabase Storage invoices bucket
+      const storagePath = `${shopId}/invoices/${orderId}-invoice.txt`;
+      const { error } = await supabase.storage.from("invoices").upload(storagePath, txtBuffer, {
+        contentType: "text/plain; charset=utf-8",
         upsert: true,
       });
 
@@ -86,27 +69,28 @@ export class InvoiceService {
         throw new Error(`Supabase Storage invoice upload failed: ${error.message}`);
       }
 
-      // 5. Retrieve public invoice URL
+      // 4. Retrieve public invoice URL
       const { data: urlData } = supabase.storage.from("invoices").getPublicUrl(storagePath);
       const invoicePdfUrl = urlData.publicUrl;
 
-      // 6. Update database Order row
+      // 5. Update database Order row
       await prisma.order.update({
         where: { id: orderId },
         data: { invoicePdfUrl },
       });
 
-      // 7. Dispatch document file to buyer
+      // 6. Dispatch .txt document file to Telegram buyer
       if (order.customer) {
+        const shortId = orderId.slice(-8).toUpperCase();
         await telegramClient.sendDocument(
           order.shop.botToken,
           order.customer.telegramId.toString(),
           invoicePdfUrl,
-          `Invoice-${orderId.slice(-8).toUpperCase()}.pdf`
+          `Invoice-${shortId}.txt`
         );
       }
 
-      console.log(`Invoice successfully compiled, uploaded, and dispatched for order ${orderId}`);
+      console.log(`Invoice (.txt) successfully compiled, uploaded, and dispatched for order ${orderId}`);
     } catch (err: any) {
       console.error(`Invoice generation error for order ${orderId}:`, err.message);
     }
