@@ -129,7 +129,7 @@ export function Subscription() {
           </div>
           <ul style={{ listStyle: "none", padding: "0", margin: "0 0 32px 0", display: "flex", flexDirection: "column", gap: "12px", flex: 1, fontSize: "13.5px", color: "var(--text-secondary)" }}>
             <li className="flex-gap-12"><ShieldCheck size={16} style={{ color: "var(--success-color)" }} /> 1 Active Storefront Bot</li>
-            <li className="flex-gap-12"><ShieldCheck size={16} style={{ color: "var(--success-color)" }} /> Unlimited Product Catalog Items</li>
+            <li className="flex-gap-12"><ShieldCheck size={16} style={{ color: "var(--success-color)" }} /> Up to 100 Product Catalog Items</li>
             <li className="flex-gap-12"><ShieldCheck size={16} style={{ color: "var(--success-color)" }} /> Bilingual Customer Service Chat</li>
             <li className="flex-gap-12"><ShieldCheck size={16} style={{ color: "var(--success-color)" }} /> Supabase Backup & Sync</li>
           </ul>
@@ -147,13 +147,13 @@ export function Subscription() {
             <h3 style={{ margin: "6px 0 0", fontSize: "24px", fontWeight: "700" }}>3 Months License</h3>
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: "4px", marginBottom: "24px" }}>
-            <span style={{ fontSize: "32px", fontWeight: "800", color: "var(--text-primary)" }}>55,000</span>
+            <span style={{ fontSize: "32px", fontWeight: "800", color: "var(--text-primary)" }}>85,000</span>
             <span style={{ fontSize: "15px", color: "var(--text-secondary)" }}>MMK / 3mo</span>
-            <span style={{ marginLeft: "8px", fontSize: "11px", color: "var(--success-color)", fontWeight: "600", background: "rgba(34, 197, 94, 0.1)", padding: "2px 6px", borderRadius: "4px" }}>Save 38%</span>
+            <span style={{ marginLeft: "8px", fontSize: "11px", color: "var(--success-color)", fontWeight: "600", background: "rgba(34, 197, 94, 0.1)", padding: "2px 6px", borderRadius: "4px" }}>Save 6%</span>
           </div>
           <ul style={{ listStyle: "none", padding: "0", margin: "0 0 32px 0", display: "flex", flexDirection: "column", gap: "12px", flex: 1, fontSize: "13.5px", color: "var(--text-secondary)" }}>
             <li className="flex-gap-12"><ShieldCheck size={16} style={{ color: "var(--success-color)" }} /> 1 Active Storefront Bot</li>
-            <li className="flex-gap-12"><ShieldCheck size={16} style={{ color: "var(--success-color)" }} /> Unlimited Product Catalog Items</li>
+            <li className="flex-gap-12"><ShieldCheck size={16} style={{ color: "var(--success-color)" }} /> Up to 100 Product Catalog Items</li>
             <li className="flex-gap-12"><ShieldCheck size={16} style={{ color: "var(--success-color)" }} /> Bilingual Customer Service Chat</li>
             <li className="flex-gap-12"><ShieldCheck size={16} style={{ color: "var(--success-color)" }} /> Supabase Backup & Sync</li>
             <li className="flex-gap-12" style={{ fontWeight: "600", color: "var(--text-primary)" }}><Zap size={16} style={{ color: "var(--accent-color)" }} /> Priority Support Assistance</li>
@@ -168,13 +168,13 @@ export function Subscription() {
             <h3 style={{ margin: "6px 0 0", fontSize: "24px", fontWeight: "700" }}>6 Months License</h3>
           </div>
           <div style={{ display: "flex", alignItems: "baseline", gap: "4px", marginBottom: "24px" }}>
-            <span style={{ fontSize: "32px", fontWeight: "800", color: "var(--text-primary)" }}>100,000</span>
+            <span style={{ fontSize: "32px", fontWeight: "800", color: "var(--text-primary)" }}>160,000</span>
             <span style={{ fontSize: "15px", color: "var(--text-secondary)" }}>MMK / 6mo</span>
-            <span style={{ marginLeft: "8px", fontSize: "11px", color: "var(--success-color)", fontWeight: "600", background: "rgba(34, 197, 94, 0.1)", padding: "2px 6px", borderRadius: "4px" }}>Save 44%</span>
+            <span style={{ marginLeft: "8px", fontSize: "11px", color: "var(--success-color)", fontWeight: "600", background: "rgba(34, 197, 94, 0.1)", padding: "2px 6px", borderRadius: "4px" }}>Save 11%</span>
           </div>
           <ul style={{ listStyle: "none", padding: "0", margin: "0 0 32px 0", display: "flex", flexDirection: "column", gap: "12px", flex: 1, fontSize: "13.5px", color: "var(--text-secondary)" }}>
             <li className="flex-gap-12"><ShieldCheck size={16} style={{ color: "var(--success-color)" }} /> 1 Active Storefront Bot</li>
-            <li className="flex-gap-12"><ShieldCheck size={16} style={{ color: "var(--success-color)" }} /> Unlimited Product Catalog Items</li>
+            <li className="flex-gap-12"><ShieldCheck size={16} style={{ color: "var(--success-color)" }} /> Up to 100 Product Catalog Items</li>
             <li className="flex-gap-12"><ShieldCheck size={16} style={{ color: "var(--success-color)" }} /> Bilingual Customer Service Chat</li>
             <li className="flex-gap-12"><ShieldCheck size={16} style={{ color: "var(--success-color)" }} /> Supabase Backup & Sync</li>
             <li className="flex-gap-12" style={{ fontWeight: "600", color: "var(--text-primary)" }}><Zap size={16} style={{ color: "var(--accent-color)" }} /> Priority Support Assistance</li>
