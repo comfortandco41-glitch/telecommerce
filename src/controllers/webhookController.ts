@@ -31,10 +31,23 @@ export class WebhookController {
       // Convert updateId safely
       const updateId = BigInt(updateIdVal as string | number);
 
-      // 1. Verify shop existence
-      const shop = await this.shopRepo.getById(shopId);
+      // 1. Verify shop existence and merchant subscription status
+      const shop = await this.shopRepo.getByIdWithMerchant(shopId);
       if (!shop) {
         throw new NotFoundError("Shop not found");
+      }
+
+      // Check if merchant subscription is expired
+      if (shop.merchant && shop.merchant.subscriptionExpiresAt) {
+        const isExpired = new Date(shop.merchant.subscriptionExpiresAt) < new Date();
+        if (isExpired || shop.merchant.subscriptionStatus === "EXPIRED") {
+          console.warn(`[WEBHOOK BLOCKED] Shop ${shopId} bot is paused because merchant ${shop.merchant.email} subscription has expired.`);
+          res.status(200).json({
+            success: false,
+            message: "Merchant subscription has expired. Bot automation paused.",
+          });
+          return;
+        }
       }
 
       // 2. Security validation: Verify bot secret token header

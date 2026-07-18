@@ -10,7 +10,9 @@ import { handleGetCustomers } from "./controllers/customerController";
 import { handleGetBroadcasts, handleCreateBroadcast } from "./controllers/broadcastController";
 import { handleGetChatHistory, handleSendSupportMessage } from "./controllers/chatController";
 import { handleUpload } from "./controllers/uploadController";
-import { authMiddleware } from "./middlewares/authMiddleware";
+import { authMiddleware, checkSubscriptionMiddleware } from "./middlewares/authMiddleware";
+import { adminMiddleware } from "./middlewares/adminMiddleware";
+import { handleExtendSubscription } from "./controllers/adminController";
 import { shopAccessMiddleware } from "./middlewares/shopAccessMiddleware";
 import { errorMiddleware } from "./middlewares/errorMiddleware";
 import { authRateLimiter, webhookRateLimiter } from "./middlewares/rateLimitMiddleware";
@@ -46,6 +48,9 @@ const productController = new ProductController();
 // Public Webhook Route (Webhook secret header validation is handled in the controller)
 app.post("/api/v1/webhook/:shopId", webhookRateLimiter, webhookController.handleWebhook);
 
+// Admin Routes (Secured with x-admin-secret)
+app.post("/api/v1/admin/subscription", adminMiddleware, handleExtendSubscription);
+
 // Auth Routes
 app.post("/api/v1/auth/register", authRateLimiter, handleRegister);
 app.post("/api/v1/auth/login", authRateLimiter, handleLogin);
@@ -53,14 +58,15 @@ app.post("/api/v1/auth/forgot-password", authRateLimiter, handleForgotPassword);
 app.post("/api/v1/auth/reset-password", authRateLimiter, handleResetPassword);
 app.get("/api/v1/auth/me", authMiddleware, handleMe);
 app.get("/api/v1/shops", authMiddleware, handleGetShops);
-app.post("/api/v1/shops", authMiddleware, handleCreateShop);
-app.put("/api/v1/shops/:shopId", authMiddleware, shopAccessMiddleware, handleUpdateShop);
+app.post("/api/v1/shops", authMiddleware, checkSubscriptionMiddleware, handleCreateShop);
+app.put("/api/v1/shops/:shopId", authMiddleware, shopAccessMiddleware, checkSubscriptionMiddleware, handleUpdateShop);
 
 // Category Routes (Secure)
 app.post(
   "/api/v1/shops/:shopId/categories",
   authMiddleware,
   shopAccessMiddleware,
+  checkSubscriptionMiddleware,
   categoryController.createCategory
 );
 app.get(

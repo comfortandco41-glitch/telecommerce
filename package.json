@@ -10,6 +10,7 @@
     "dev": "nodemon src/index.ts",
     "dev:frontend": "npm run dev --prefix dashboard",
     "setup-webhook": "ts-node scripts/setup-webhook.ts",
+    "extend-subscription": "ts-node scripts/extend-subscription.ts",
     "test": "jest --runInBand --detectOpenHandles"
   },
   "engines": {

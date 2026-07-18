@@ -73,9 +73,9 @@ export function Subscription() {
           <div>
             <span style={{ fontSize: "12px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "1px" }}>Current Account State</span>
             <h3 style={{ margin: "4px 0 0", fontSize: "20px", fontWeight: "700", display: "flex", alignItems: "center", gap: "10px" }}>
-              <span>{merchant?.subscriptionStatus === "TRIAL" ? "14-Day Free Trial" : "Premium Active"}</span>
-              <span className="badge badge-success" style={{ fontSize: "11px", padding: "3px 8px" }}>
-                {daysLeft > 0 ? `${daysLeft} Days Remaining` : "License Expired"}
+              <span>{merchant?.subscriptionStatus === "EXPIRED" || daysLeft === 0 ? "Account Expired" : merchant?.subscriptionStatus === "TRIAL" ? "14-Day Free Trial" : "Premium Active"}</span>
+              <span className={daysLeft > 0 ? "badge badge-success" : "badge badge-danger"} style={{ fontSize: "11px", padding: "3px 8px", backgroundColor: daysLeft > 0 ? undefined : "rgba(239, 68, 68, 0.2)", color: daysLeft > 0 ? undefined : "#EF4444" }}>
+                {daysLeft > 0 ? `${daysLeft} Days Remaining` : "Expired"}
               </span>
             </h3>
           </div>

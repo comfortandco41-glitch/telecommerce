@@ -8,6 +8,13 @@ export class ShopRepository {
     });
   }
 
+  async getByIdWithMerchant(id: string) {
+    return prisma.shop.findUnique({
+      where: { id },
+      include: { merchant: true },
+    });
+  }
+
   async getByToken(botToken: string): Promise<Shop | null> {
     return prisma.shop.findUnique({
       where: { botToken },

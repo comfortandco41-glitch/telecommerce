@@ -10,6 +10,7 @@ export interface AuthenticatedRequest extends Request {
     name: string;
     subscriptionStatus?: string;
     subscriptionExpiresAt?: Date | null;
+    isExpired?: boolean;
   };
 }
 
@@ -35,15 +36,37 @@ export async function authMiddleware(
       return next(new AppError("Unauthorized: Merchant profile not found", 401, "UNAUTHORIZED"));
     }
 
+    const isExpired = merchant.subscriptionExpiresAt
+      ? new Date(merchant.subscriptionExpiresAt) < new Date() || merchant.subscriptionStatus === "EXPIRED"
+      : false;
+
     req.merchant = {
       id: merchant.id,
       email: merchant.email,
       name: merchant.name,
-      subscriptionStatus: merchant.subscriptionStatus,
+      subscriptionStatus: isExpired ? "EXPIRED" : merchant.subscriptionStatus,
       subscriptionExpiresAt: merchant.subscriptionExpiresAt,
+      isExpired,
     };
     next();
   } catch (err) {
     return next(new AppError("Unauthorized: Invalid token signature", 401, "UNAUTHORIZED"));
   }
+}
+
+export async function checkSubscriptionMiddleware(
+  req: AuthenticatedRequest,
+  _res: Response,
+  next: NextFunction
+): Promise<void> {
+  if (req.merchant?.isExpired) {
+    return next(
+      new AppError(
+        "Subscription expired. Please contact admin @TCsub_bot on Telegram to renew your account.",
+        402,
+        "SUBSCRIPTION_EXPIRED"
+      )
+    );
+  }
+  next();
 }

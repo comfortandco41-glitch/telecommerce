@@ -68,4 +68,18 @@ export class MerchantRepository {
       },
     });
   }
+
+  async updateSubscription(
+    id: string,
+    subscriptionStatus: string,
+    subscriptionExpiresAt: Date
+  ): Promise<Merchant> {
+    return prisma.merchant.update({
+      where: { id },
+      data: {
+        subscriptionStatus,
+        subscriptionExpiresAt,
+      },
+    });
+  }
 }

@@ -11,8 +11,32 @@ export function DashboardLayout() {
   const [shops, setShops] = useState<any[]>([]);
   const [selectedShopId, setSelectedShopId] = useState<string>("");
   const [loading, setLoading] = useState(true);
-  
-  // Shop Creation Modal state
+  const [merchantInfo, setMerchantInfo] = useState<any>(null);
+
+  // ...
+
+  const fetchMerchant = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/v1/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const json = await res.json();
+      if (res.ok && json.success) {
+        setMerchantInfo(json.data.merchant);
+      }
+    } catch (err) {
+      console.error("Failed to fetch merchant profile", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchShops();
+    fetchMerchant();
+  }, []);
+
+  const isExpired = merchantInfo?.subscriptionExpiresAt
+    ? new Date(merchantInfo.subscriptionExpiresAt) < new Date() || merchantInfo.subscriptionStatus === "EXPIRED"
+    : false;
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newShopName, setNewShopName] = useState("");
   const [newShopToken, setNewShopToken] = useState("");
@@ -268,6 +292,48 @@ export function DashboardLayout() {
             </div>
           </div>
         </header>
+
+        {isExpired && (
+          <div
+            style={{
+              backgroundColor: "rgba(239, 68, 68, 0.15)",
+              borderBottom: "1px solid rgba(239, 68, 68, 0.4)",
+              color: "#EF4444",
+              padding: "12px 24px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              fontSize: "14px",
+              fontWeight: "600",
+            }}
+          >
+            <div>
+              ⚠️ <strong>Account Expired:</strong> Your subscription expired on{" "}
+              {merchantInfo?.subscriptionExpiresAt
+                ? new Date(merchantInfo.subscriptionExpiresAt).toLocaleDateString()
+                : "the previous billing cycle"}
+              . Telegram bot automation and store modifications are currently paused.
+            </div>
+            <a
+              href="https://t.me/TCsub_bot"
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                backgroundColor: "#EF4444",
+                color: "#ffffff",
+                padding: "6px 14px",
+                borderRadius: "6px",
+                textDecoration: "none",
+                fontSize: "12px",
+                fontWeight: "700",
+                whiteSpace: "nowrap",
+                marginLeft: "16px",
+              }}
+            >
+              Contact @TCsub_bot to Renew
+            </a>
+          </div>
+        )}
 
         {/* Content Outlet */}
         {shops.length > 0 ? (
