@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, ShoppingCart, Package, LogOut, Plus, Megaphone, MessageSquare, Settings2, CreditCard } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, Package, LogOut, Plus, Megaphone, MessageSquare, Settings2, CreditCard, Sun, Moon } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
+import { useTheme } from "../context/ThemeContext";
 
 export function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { language, setLanguage, t } = useLanguage();
+  const { theme, setTheme } = useTheme();
   
   const [shops, setShops] = useState<any[]>([]);
   const [selectedShopId, setSelectedShopId] = useState<string>("");
@@ -246,6 +248,48 @@ export function DashboardLayout() {
           </div>
 
           <div className="header-user-section">
+            {/* Theme Switcher Toggle */}
+            <div style={{ display: "flex", alignItems: "center", background: "var(--bg-hover)", border: "1px solid var(--border-color)", borderRadius: "20px", padding: "3px", marginRight: "12px" }}>
+              <button
+                type="button"
+                onClick={() => setTheme("light")}
+                title="Light Mode"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "4px 8px",
+                  borderRadius: "16px",
+                  border: "none",
+                  backgroundColor: theme === "light" ? "var(--accent-color)" : "transparent",
+                  color: theme === "light" ? "#FFFFFF" : "var(--text-secondary)",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <Sun size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setTheme("dark")}
+                title="Dark Mode"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "4px 8px",
+                  borderRadius: "16px",
+                  border: "none",
+                  backgroundColor: theme === "dark" ? "var(--accent-color)" : "transparent",
+                  color: theme === "dark" ? "#FFFFFF" : "var(--text-secondary)",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <Moon size={14} />
+              </button>
+            </div>
+
             {/* Language Switcher Toggle */}
             <div style={{ display: "flex", gap: "6px", marginRight: "16px" }}>
               <button
